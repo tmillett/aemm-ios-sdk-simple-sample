@@ -1,0 +1,16 @@
+{
+    "assets": [
+        {
+            "url":"http://10.50.213.159/content/dam/bg_hotel_room.png",
+            "md5":"b12345defabc12346791828743",
+            "length":1000,
+			"localPath":"imgs/bg_hotel_3.png"
+        },
+        {
+            "url":"http://10.50.213.159/content/dam/bg_hotel_room-3.png",
+            "md5":"b12345defabc12346791828743",
+            "length":2000,
+			"localPath":"imgs/bg_hotel_room-3.png"
+        }
+    ]
+}

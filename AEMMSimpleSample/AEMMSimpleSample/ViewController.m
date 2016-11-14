@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import <AEMMSDK/AEMMSDK.h>
 
 @interface ViewController ()
 
@@ -16,6 +17,15 @@
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
+
+	AEMAssetSourceFactory *factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"file:///Users/tmillett/_dev/git/aemm-ios-sdk-simple-sample/AEMMSimpleSample"]];
+	NSArray *dirpaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+	NSString *dirpath = [dirpaths objectAtIndex:0];
+
+	AEMAssetSource *source = [factory createAssetSourceWithIdentifier:@"id1" withRootFilePath:dirpath];
+	[source syncInBackground:YES];
+
+
 }
 
 
