@@ -70,12 +70,17 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (id)createAssetSourceSyncTaskWithBackgroundURLSessionIdentifier:(NSString *)urlSessionIdentifier withBackgroundCompletionHandler:(void (^)())completionHandler {
-
-	AEMAssetSourceSyncTask *syncTask = [AEMAssetSourceSyncTask assetSourceSyncTaskWithSessionIdentifier:urlSessionIdentifier withAssetService:self.assetService];
-
-	syncTask.backgroundTransferCompletionHandler = completionHandler;
-
-	return syncTask;
+	NSArray *identifierComponents = [urlSessionIdentifier componentsSeparatedByString:@"-"];
+	if (identifierComponents.count == 3 && [identifierComponents[0] isEqualToString:@"AEMAssetSourceSyncTaskSessionIdentifier"]) {
+		NSString *identifier = identifierComponents[1];
+		NSString *rootFilePath = [identifierComponents[2] stringByDeletingLastPathComponent];
+		AEMAssetSource *assetSource = [self createAssetSourceWithIdentifier:identifier withRootFilePath:rootFilePath];
+		AEMAssetSourceSyncTask *syncTask = [assetSource syncInBackground:YES];
+		syncTask.backgroundTransferCompletionHandler = completionHandler;
+		return syncTask;
+	} else {
+		return nil;
+	}
 }
 
 @end

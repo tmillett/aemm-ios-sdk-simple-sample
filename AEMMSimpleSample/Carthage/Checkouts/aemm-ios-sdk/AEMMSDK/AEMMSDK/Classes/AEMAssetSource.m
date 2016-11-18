@@ -35,17 +35,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation AEMAssetSource
 
-+ (instancetype)assetSourceFromDictionary:(NSDictionary *)assetSourceDict withAssetService:(AEMAssetService *)assetService {
-	AEMAssetSource *assetSource = nil;
-	@try {
-		assetSource = [[AEMAssetSource alloc] initWithIdentifier:assetSourceDict[@"identifier"] withRootFilePath:assetSourceDict[@"rootFilePath"] withAssetService:assetService];
-	} @catch (NSException *exception) {
-
-	} @finally {
-		return assetSource;
-	}
-}
-
 - (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath withAssetService:(AEMAssetService *)assetService
 {
 	if (self = [super init]) {
@@ -85,10 +74,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)latestManifestPath {
 	return [self.rootFilePath stringByAppendingPathComponent:@"latestManifest.json"];
-}
-
-- (NSDictionary *)toDictionary {
-	return @{@"identifier" : self.identifier, @"rootFilePath" : self.rootFilePath};
 }
 
 #pragma mark - Equality

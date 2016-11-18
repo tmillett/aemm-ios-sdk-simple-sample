@@ -11,8 +11,6 @@
 		D31B215F1DCD14450071A87B /* AEMAssetSourceFactoryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D31B215E1DCD14450071A87B /* AEMAssetSourceFactoryTests.m */; };
 		D31B21681DCD221B0071A87B /* BaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D31B21671DCD221B0071A87B /* BaseTest.m */; };
 		D31B216A1DCD22250071A87B /* testfiles in Resources */ = {isa = PBXBuildFile; fileRef = D31B21691DCD22250071A87B /* testfiles */; };
-		D36EF0101DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */; };
-		D36EF0111DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */; };
 		D3AB17B51DB985BD00C933B0 /* AEMAssetService.h in Headers */ = {isa = PBXBuildFile; fileRef = D3AB17B31DB985BD00C933B0 /* AEMAssetService.h */; };
 		D3AB17B61DB985BD00C933B0 /* AEMAssetService.m in Sources */ = {isa = PBXBuildFile; fileRef = D3AB17B41DB985BD00C933B0 /* AEMAssetService.m */; };
 		D3AB17BF1DBAA7E900C933B0 /* AEMTask+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = D3AB17BD1DBAA7E900C933B0 /* AEMTask+Internal.h */; };
@@ -89,8 +87,6 @@
 		D31B21661DCD221B0071A87B /* BaseTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseTest.h; sourceTree = "<group>"; };
 		D31B21671DCD221B0071A87B /* BaseTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BaseTest.m; sourceTree = "<group>"; };
 		D31B21691DCD22250071A87B /* testfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = testfiles; sourceTree = "<group>"; };
-		D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEMAssetSourceSyncTaskDownloadInfo.h; path = Classes/AEMAssetSourceSyncTaskDownloadInfo.h; sourceTree = "<group>"; };
-		D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AEMAssetSourceSyncTaskDownloadInfo.m; path = Classes/AEMAssetSourceSyncTaskDownloadInfo.m; sourceTree = "<group>"; };
 		D3AB17B31DB985BD00C933B0 /* AEMAssetService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEMAssetService.h; path = Classes/AEMAssetService.h; sourceTree = "<group>"; };
 		D3AB17B41DB985BD00C933B0 /* AEMAssetService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AEMAssetService.m; path = Classes/AEMAssetService.m; sourceTree = "<group>"; };
 		D3AB17BD1DBAA7E900C933B0 /* AEMTask+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AEMTask+Internal.h"; path = "Classes/AEMTask+Internal.h"; sourceTree = "<group>"; };
@@ -221,8 +217,6 @@
 				D3AB17B41DB985BD00C933B0 /* AEMAssetService.m */,
 				D30EC0D61DC28A53008FF2AC /* AEMAssetSource+Internal.h */,
 				D3BED1831DB0572300DBBF52 /* AEMAssetSourceSyncTask+Internal.h */,
-				D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */,
-				D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */,
 				D3AB17BD1DBAA7E900C933B0 /* AEMTask+Internal.h */,
 				D3DCA18D1DC3CF7F0002451F /* Debugging */,
 				D3DCA1731DC3C9200002451F /* Helpers */,
@@ -313,7 +307,6 @@
 				D3DCA17D1DC3CCFE0002451F /* NSPointerArray+Helpers.h in Headers */,
 				D3DCA1881DC3CD080002451F /* RemoteResponseParser+Internal.h in Headers */,
 				D3DCA1941DC3CFE00002451F /* NSURL+Helpers.h in Headers */,
-				D36EF0101DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h in Headers */,
 				D3DCA17F1DC3CCFE0002451F /* NSString+Helpers.h in Headers */,
 				D3AB17B51DB985BD00C933B0 /* AEMAssetService.h in Headers */,
 				D3DCA1981DC3D0870002451F /* NSError+Helpers.h in Headers */,
@@ -451,7 +444,6 @@
 				D3DCA1951DC3CFE00002451F /* NSURL+Helpers.m in Sources */,
 				D3DCA1991DC3D0870002451F /* NSError+Helpers.m in Sources */,
 				D3DCA17C1DC3CCFE0002451F /* JSONHelpers.m in Sources */,
-				D36EF0111DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m in Sources */,
 				D3C203041DB04490005BED65 /* AEMAssetSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

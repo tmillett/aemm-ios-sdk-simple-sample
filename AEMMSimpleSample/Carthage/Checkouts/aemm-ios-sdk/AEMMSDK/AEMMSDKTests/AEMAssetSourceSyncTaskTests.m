@@ -176,7 +176,7 @@
 		return [request.URL.path isEqualToString:@"/content/dam/bg_hotel_room.png"];
 	} withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
 
-		NSString* fixture = [self testFilePath:@"bg_hotel_room.png"];
+		NSString* fixture = OHPathForFile(@"bg_hotel_room.png", self.class);
 		return [OHHTTPStubsResponse responseWithFileAtPath:fixture statusCode:200 headers:@{@"Content-Type":kHTTPContentTypeImagePNG}];
 	}];
 
@@ -184,7 +184,7 @@
 		return [request.URL.path isEqualToString:@"/content/dam/bg_hotel_facade-1.png"];
 	} withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
 
-		NSString* fixture = [self testFilePath:@"bg_hotel_facade-1.png"];
+		NSString* fixture = OHPathForFile(@"bg_hotel_facade-1.png", self.class);
 		return [OHHTTPStubsResponse responseWithFileAtPath:fixture statusCode:200 headers:@{@"Content-Type":kHTTPContentTypeImagePNG}];
 	}];
 
@@ -192,7 +192,7 @@
 		return [request.URL.path isEqualToString:@"/content/dam/bg_hotel_room-3.png"];
 	} withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
 
-		NSString* fixture = [self testFilePath:@"bg_hotel_room-3.png"];
+		NSString* fixture = OHPathForFile(@"bg_hotel_room-3.png", self.class);
 		return [OHHTTPStubsResponse responseWithFileAtPath:fixture statusCode:200 headers:@{@"Content-Type":kHTTPContentTypeImagePNG}];
 	}];
 
@@ -315,44 +315,6 @@
 
 	success = [[NSFileManager defaultManager] removeItemAtPath:localRootPath error:nil];
 	XCTAssertTrue(success);
-}
-
-- (void)xtestDownloadInBackground {
-
-	NSString *cachesDirectory = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-	NSString* localRootPath = [cachesDirectory stringByAppendingPathComponent:@"contentCache"];
-
-	NSError* fileRemoveError = nil;
-	BOOL success = [[NSFileManager defaultManager] removeItemAtPath:localRootPath error:&fileRemoveError];
-	XCTAssertTrue(success || ([fileRemoveError.domain isEqualToString:NSCocoaErrorDomain] && fileRemoveError.code == NSFileNoSuchFileError));
-
-	AEMAssetSourceFactory *factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"http://pepsi.sea.adobe.com/stage/tmillett/aemmsdk"]];
-
-	[[NSFileManager defaultManager] createDirectoryAtPath:localRootPath withIntermediateDirectories:YES attributes:nil error:nil];
-
-
-	AEMAssetSource *source = [factory createAssetSourceWithIdentifier:@"hotel1" withRootFilePath:localRootPath];
-	AEMAssetSourceSyncTask *task = [source syncInBackground:YES];
-	AEMTaskListener *taskListener = [[AEMTaskListener alloc] init];
-	[task addSuccessListener:taskListener];
-	[task addErrorListener:taskListener];
-	[task addProgressListener:taskListener];
-
-	[self expectationForNotification:@"AEMAssetSourceSyncTaskCompleted" object:task handler:^BOOL(NSNotification *notification) {
-		AEMAssetSourceSyncTask* task = notification.object;
-		XCTAssert([task isKindOfClass:AEMAssetSourceSyncTask.class]);
-		BOOL isDir = NO;
-		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:task.assetSource.rootFilePath isDirectory:&isDir]);
-		XCTAssertTrue(isDir);
-
-		return YES;
-	}];
-	[self waitForExpectationsWithTimeout:100 handler:nil];
-
-	success = [[NSFileManager defaultManager] removeItemAtPath:localRootPath error:nil];
-	XCTAssertTrue(success);
-
-
 }
 
 

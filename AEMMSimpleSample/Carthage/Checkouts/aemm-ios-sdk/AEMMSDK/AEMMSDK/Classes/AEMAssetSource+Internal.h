@@ -25,19 +25,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AEMAssetSource (Internal)
 
-+ (instancetype)assetSourceFromDictionary:(NSDictionary *)assetSourceDict withAssetService:(AEMAssetService *)assetService;
-
 - (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath withAssetService:(AEMAssetService *)assetService;
 
 - (NSURLSession *)createURLSessionInBackground:(BOOL)inBackground;
 
-@property (nonatomic, strong, readonly) NSString *base64Identifier;
 @property (nonatomic, weak, readonly) AEMAssetService *assetService;
 @property (nonatomic, strong, readonly) NSURL *manifestURL;
 @property (nonatomic, readonly) NSString *existingManifestPath;
 @property (nonatomic, readonly) NSString *latestManifestPath;
-
-- (NSDictionary *)toDictionary;
 
 @end
 

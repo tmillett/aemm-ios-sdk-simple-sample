@@ -53,16 +53,21 @@
 {
 	NSLog(@"Left Button Tapped");
 
-	self.factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"http://pepsi.sea.adobe.com/stage/tmillett/aemmsdk"]];
+	NSURL *url = [NSURL URLWithString:@"http://10.50.213.159:4502/content/entities"];
+
+	self.factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:url];
 	NSArray *dirpaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 	NSString *dirpath = [dirpaths objectAtIndex:0];
 
-	self.source = [self.factory createAssetSourceWithIdentifier:@"hotel1" withRootFilePath:dirpath];
-	self.task = [self.source syncInBackground:YES];
+	NSLog(@"cache location:%@",dirpath);
+
+	self.source = [self.factory createAssetSourceWithIdentifier:@"hotelBuddy" withRootFilePath:dirpath];
+	self.task = [self.source syncInBackground:NO];
 	self.listener = [[AEMTaskListener alloc] init];
 
 	[self.task addSuccessListener:self.listener];
 	[self.task addErrorListener:self.listener];
+
 }
 
 

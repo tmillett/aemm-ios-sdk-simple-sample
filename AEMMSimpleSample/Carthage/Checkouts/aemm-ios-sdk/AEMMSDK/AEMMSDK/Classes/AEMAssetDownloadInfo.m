@@ -58,7 +58,7 @@ static NSInteger const kCurrentVersion = 0;
 
 		self.version = [dict[kAEMAssetDownloadInfoVersionKey] integerValue];
 		self.taskIdentifier = [dict[kAEMAssetDownloadInfoTaskIdentifierKey] integerValue] ?: -1;
-		self.remoteURL = [NSURL URLWithString:dict[kAEMAssetDownloadInfoRemoteURLKey]];
+		self.remoteURL = dict[kAEMAssetDownloadInfoRemoteURLKey];
 		self.localPath = dict[kAEMAssetDownloadInfoLocalPathKey];
 	}
 
@@ -70,7 +70,7 @@ static NSInteger const kCurrentVersion = 0;
 
 	dict[kAEMAssetDownloadInfoVersionKey] = @(self.version);
 	dict[kAEMAssetDownloadInfoLocalPathKey] = self.localPath;
-	dict[kAEMAssetDownloadInfoRemoteURLKey] = [self.remoteURL absoluteString];
+	dict[kAEMAssetDownloadInfoRemoteURLKey] = self.remoteURL;
 	dict[kAEMAssetDownloadInfoDownloadCompleteKey] = @(self.downloadComplete);
 
 
