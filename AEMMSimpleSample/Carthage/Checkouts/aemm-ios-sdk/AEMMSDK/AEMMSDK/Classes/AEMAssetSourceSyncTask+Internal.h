@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AEMAssetSourceSyncTask (Internal)
 
++ (instancetype)assetSourceSyncTaskWithSessionIdentifier:(NSString *)sessionIdentifier withAssetService:(AEMAssetService *)assetService;
+
 + (NSString *)sessionIdentifierForAssetSource:(AEMAssetSource *)assetSource;
 
 - (instancetype)initWithAssetSource:(AEMAssetSource *)assetSource inBackground:(BOOL)inBackground;

@@ -15,6 +15,7 @@
 		D365F44D1DD3F62900A9EEE1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D365F44B1DD3F62900A9EEE1 /* LaunchScreen.storyboard */; };
 		D365F4581DD3F62900A9EEE1 /* AEMMSimpleSampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D365F4571DD3F62900A9EEE1 /* AEMMSimpleSampleTests.m */; };
 		D365F4631DD3F62900A9EEE1 /* AEMMSimpleSampleUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = D365F4621DD3F62900A9EEE1 /* AEMMSimpleSampleUITests.m */; };
+		D3A02EAA1DDD70C100C95676 /* AEMTaskListener.m in Sources */ = {isa = PBXBuildFile; fileRef = D3A02EA91DDD70C100C95676 /* AEMTaskListener.m */; };
 		D3AE88041DD5522900EA79E4 /* AEMMSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D3AE88031DD5522900EA79E4 /* AEMMSDK.framework */; };
 		D3AE88051DD5522900EA79E4 /* AEMMSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D3AE88031DD5522900EA79E4 /* AEMMSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D3AE88091DD5544F00EA79E4 /* tools in Resources */ = {isa = PBXBuildFile; fileRef = D3AE88081DD5544F00EA79E4 /* tools */; };
@@ -68,6 +69,8 @@
 		D365F45E1DD3F62900A9EEE1 /* AEMMSimpleSampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AEMMSimpleSampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D365F4621DD3F62900A9EEE1 /* AEMMSimpleSampleUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AEMMSimpleSampleUITests.m; sourceTree = "<group>"; };
 		D365F4641DD3F62900A9EEE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D3A02EA81DDD70C100C95676 /* AEMTaskListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEMTaskListener.h; sourceTree = "<group>"; };
+		D3A02EA91DDD70C100C95676 /* AEMTaskListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEMTaskListener.m; sourceTree = "<group>"; };
 		D3AE88031DD5522900EA79E4 /* AEMMSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AEMMSDK.framework; path = Carthage/Build/iOS/AEMMSDK.framework; sourceTree = "<group>"; };
 		D3AE88081DD5544F00EA79E4 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; path = tools; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -132,6 +135,8 @@
 				D365F44B1DD3F62900A9EEE1 /* LaunchScreen.storyboard */,
 				D365F44E1DD3F62900A9EEE1 /* Info.plist */,
 				D365F43D1DD3F62900A9EEE1 /* Supporting Files */,
+				D3A02EA81DDD70C100C95676 /* AEMTaskListener.h */,
+				D3A02EA91DDD70C100C95676 /* AEMTaskListener.m */,
 			);
 			path = AEMMSimpleSample;
 			sourceTree = "<group>";
@@ -239,7 +244,13 @@
 				TargetAttributes = {
 					D365F4391DD3F62900A9EEE1 = {
 						CreatedOnToolsVersion = 8.1;
-						ProvisioningStyle = Automatic;
+						DevelopmentTeam = JQ525L2MZD;
+						ProvisioningStyle = Manual;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 					D365F4521DD3F62900A9EEE1 = {
 						CreatedOnToolsVersion = 8.1;
@@ -323,6 +334,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D3A02EAA1DDD70C100C95676 /* AEMTaskListener.m in Sources */,
 				D365F4451DD3F62900A9EEE1 /* ViewController.m in Sources */,
 				D365F4421DD3F62900A9EEE1 /* AppDelegate.m in Sources */,
 				D365F43F1DD3F62900A9EEE1 /* main.m in Sources */,
@@ -474,14 +486,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = JQ525L2MZD;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
 				INFOPLIST_FILE = AEMMSimpleSample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = Adobe.AEMMSimpleSample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adobe.dps.pushtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "d247bc60-c23c-429b-b34d-813a7d816982";
+				PROVISIONING_PROFILE_SPECIFIER = "Generic Adobe Developer";
 			};
 			name = Debug;
 		};
@@ -489,13 +504,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
 				INFOPLIST_FILE = AEMMSimpleSample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = Adobe.AEMMSimpleSample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adobe.dps.pushtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

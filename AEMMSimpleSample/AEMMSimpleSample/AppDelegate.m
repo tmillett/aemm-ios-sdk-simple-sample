@@ -7,8 +7,15 @@
 //
 
 #import "AppDelegate.h"
+#import <AEMMSDK/AEMMSDK.h>
+#import "AEMTaskListener.h"
 
 @interface AppDelegate ()
+
+@property (nonatomic, strong) AEMTaskListener *listener;
+@property (nonatomic, strong) AEMAssetSource *source;
+@property (nonatomic, strong) AEMAssetSourceSyncTask *task;
+@property (nonatomic, strong) AEMAssetSourceFactory *factory;
 
 @end
 
@@ -45,6 +52,23 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application {
 	// Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+
+-(void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler {
+
+	NSLog(@"application:(UIApplication *)application handleEventsForBackgroundURLSession:%@ completionHandler:",identifier);
+
+	self.factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"http://pepsi.sea.adobe.com/stage/tmillett/aemmsdk"]];
+
+	self.task = [self.factory createAssetSourceSyncTaskWithBackgroundURLSessionIdentifier:identifier withBackgroundCompletionHandler:completionHandler];
+	self.source = self.task.assetSource;
+	self.listener = [[AEMTaskListener alloc] init];
+
+	[self.task addSuccessListener:self.listener];
+	[self.task addErrorListener:self.listener];
+
+
 }
 
 

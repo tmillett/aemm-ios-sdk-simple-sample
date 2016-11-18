@@ -26,6 +26,7 @@
 #import "AEMTaskProgressListener.h"
 #import "AEMTaskSuccessListener.h"
 #import "RemoteResponseParser+Internal.h"
+#import "AEMAssetSourceSyncTaskDownloadInfo.h"
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -37,8 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString *stagingFilePath;
 @property (nonatomic, strong) NSURLSession *manifestUrlSession;
 @property (nonatomic, strong) NSURLSession *urlSession;
-@property (nonatomic, assign) UIBackgroundTaskIdentifier bgTaskId;
-@property (nonatomic, strong) NSMutableDictionary <NSString*, AEMAssetDownloadInfo*> *assetDownloadInfos;
+@property (nonatomic, strong) AEMAssetSourceSyncTaskDownloadInfo *assetSourceSyncTaskDownloadInfo;
 @property (nonatomic, strong) NSOperationQueue *parseQueue;
 @property (nonatomic, strong) NSDictionary* existingAssetSourceManifest;
 @property (nonatomic, assign) BOOL inBackground;
@@ -57,7 +57,41 @@ NS_ASSUME_NONNULL_BEGIN
 @implementation AEMAssetSourceSyncTask
 
 + (NSString *)sessionIdentifierForAssetSource:(AEMAssetSource *)assetSource {
-	return [NSString stringWithFormat:@"AEMAssetSourceSyncTaskSessionIdentifier-%@-%@", assetSource.identifier,assetSource.rootFilePath];
+	return [NSString stringWithFormat:@"AEMAssetSourceSyncTaskSessionIdentifier-%@-%@", assetSource.base64Identifier, assetSource.rootFilePath];
+}
+
++ (NSString *)sessionIdentifierForManifestForAssetSource:(AEMAssetSource *)assetSource {
+	return [[self.class sessionIdentifierForAssetSource:assetSource] stringByAppendingString:@"-manifest.json"];
+}
+
++ (instancetype)assetSourceSyncTaskWithSessionIdentifier:(NSString *)sessionIdentifier withAssetService:(AEMAssetService *)assetService {
+	AEMAssetSourceSyncTaskDownloadInfo *downloadInfo = [AEMAssetSourceSyncTaskDownloadInfo assetSourceSyncTaskDownloadInfoWithSessionIdentifier:sessionIdentifier withAssetService:assetService];
+	
+	if (downloadInfo) {
+		AEMAssetSourceSyncTask *syncTask = [[AEMAssetSourceSyncTask alloc] initInBackground];
+		syncTask.assetSourceSyncTaskDownloadInfo = downloadInfo;
+		syncTask.assetSource = downloadInfo.assetSource;
+		return syncTask;
+	} else {
+		return nil;
+	}
+}
+
+- (instancetype)initInBackground {
+
+	if (self = [super init]) {
+
+		self.inBackground = YES;
+		
+		self.manifestUrlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForManifestForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
+
+		self.urlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
+
+
+		self.parseQueue = [[NSOperationQueue alloc] init];
+	}
+
+	return self;
 }
 
 - (instancetype)initWithAssetSource:(AEMAssetSource *)assetSource inBackground:(BOOL)inBackground {
@@ -66,66 +100,18 @@ NS_ASSUME_NONNULL_BEGIN
 		self.assetSource = assetSource;
 		self.inBackground = inBackground;
 
-		self.assetDownloadInfos = [NSMutableDictionary dictionary];
 		self.parseQueue = [[NSOperationQueue alloc] init];
 
 		self.assetsAdded = [NSMutableDictionary dictionary];
 		self.assetsRemoved = [NSMutableDictionary dictionary];
 		self.assetsChanged = [NSMutableDictionary dictionary];
 
+		self.assetSourceSyncTaskDownloadInfo = [AEMAssetSourceSyncTaskDownloadInfo assetSourceSyncTaskDownloadInfoWithSessionIdentifier:[self.class sessionIdentifierForAssetSource:self.assetSource] withAssetSource:self.assetSource];
+
 		[self start];
 	}
 
 	return self;
-}
-
-- (NSMutableDictionary *)assetDownloadInfos {
-
-	if (_assetDownloadInfos == nil) {
-		NSMutableDictionary *dict = nil;
-		NSError *error = nil;
-		NSString *cachedAssetDownloadInfosPath = nil;
-		if (self.inBackground) {
-			NSData *data = [NSData dataWithContentsOfFile:self.cachedAssetDownloadInfosPath];
-			dict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
-		}
-		if (dict) {
-			NSMutableDictionary *assetDownloadInfos = [NSMutableDictionary dictionaryWithCapacity:dict.count];
-			for (NSString *infoKey in dict) {
-				NSDictionary *info = dict[infoKey];
-				assetDownloadInfos[infoKey] = [AEMAssetDownloadInfo assetDownloadInfoFromDict:info];
-			}
-			_assetDownloadInfos = assetDownloadInfos;
-		} else {
-			ASSERT(error == nil || error.domain == NSCocoaErrorDomain && error.code == NSFileNoSuchFileError, @"error when reading assetDownloadInfo");
-			if (self.inBackground) {
-				if (![[NSFileManager defaultManager] createDirectoryAtPath:cachedAssetDownloadInfosPath withIntermediateDirectories:YES attributes:nil error:&error]) {
-					//TODO: Handle error
-					ASSERT_FAIL(@"");
-				}
-			}
-		}
-		_assetDownloadInfos = [NSMutableDictionary dictionary];
-	}
-
-	return _assetDownloadInfos;
-}
-
-- (NSString *)cachedAssetDownloadInfosPath {
-	NSString *cachedAssetDownloadInfosPath = [NSString stringForPathComponentInCachesDirectory:@"AEMAssetSourceSyncTaskDownloadInfos"];
-	return [cachedAssetDownloadInfosPath stringByAppendingPathComponent:[self.class sessionIdentifierForAssetSource:self.assetSource]];
-}
-
-- (BOOL)saveAssetDownloadInfos:(NSError **)error {
-
-
-	NSMutableDictionary *assetDownloadInfos = [NSMutableDictionary dictionaryWithCapacity:self.assetDownloadInfos.count];
-	for (NSString *infoKey in self.assetDownloadInfos) {
-		AEMAssetDownloadInfo *info = self.assetDownloadInfos[infoKey];
-		assetDownloadInfos[infoKey] = [info toDictionary];
-	}
-	NSString *assetDownloadInfosJSON = [assetDownloadInfos JSONRepresentation];
-	return [assetDownloadInfosJSON writeToFile:self.cachedAssetDownloadInfosPath atomically:YES encoding:NSUTF8StringEncoding error:error];
 }
 
 - (void)parseExistingManifestAtPath:(NSString *)existingManifestPath
@@ -166,65 +152,31 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)downloadLatestManifestWithCompletionBlock:(void (^)(NSDictionary * _Nullable, NSError * _Nullable))completionBlock {
+- (NSURL *)manifestURL {
+	return [[self.assetSource.assetService.baseURL URLByAppendingPathComponent:self.assetSource.identifier] URLByAppendingPathComponent:@"manifest.json"];
+}
+
+- (void)downloadLatestManifest {
 
 	__block NSInteger bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithName:NSString.guidString expirationHandler:^{
 		[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
 		bgTaskId = UIBackgroundTaskInvalid;
 	}];
 
-	self.manifestUrlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
+	self.manifestUrlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForManifestForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
 
-	NSURL *manifestURL = [self.assetSource.assetService.baseURL URLByAppendingPathComponent:self.assetSource.identifier];
+	NSURL *manifestURL = [self manifestURL];
 
 	ASSERT(manifestURL, @"manifestURL is nil");
 
-	NSURLSessionTask *manifestDataTask = [self.manifestUrlSession downloadTaskWithURL:manifestURL completionHandler:^(NSURL * _Nullable location, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+	NSURLSessionTask *manifestDataTask = [self.manifestUrlSession downloadTaskWithURL:manifestURL];
 
-		if (error == nil) {
-
-			NSData *data = [NSData dataWithContentsOfFile:location.path];
-
-			if ([[NSFileManager defaultManager] fileExistsAtPath:self.assetSource.latestManifestPath]) {
-				if (![[NSFileManager defaultManager] removeItemAtPath:self.assetSource.latestManifestPath error:&error]) {
-					//TODO: Handle error
-					ASSERT_FAIL(@"");
-				};
-			}
-
-			if (![data writeToFile:self.assetSource.latestManifestPath options:kNilOptions error:&error]) {
-				//TODO: Handle error
-				ASSERT_FAIL(@"");
-			}
-
-			id json = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
-
-			RemoteResponseParser *parser = [self.assetSource.assetService createManifestParser];
-
-			[parser updateWithResponse:(NSHTTPURLResponse *)response responseObject:json completionBlock:^(NSArray *parseArray, NSError *error) {
-
-				if (completionBlock) {
-					completionBlock(parseArray[0], error);
-				}
-
-				[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
-				bgTaskId = UIBackgroundTaskInvalid;
-			}];
-
-			[self queueResponseParser:parser];
-
-		} else {
-			//TODO: Handle error
-			NSLog(@"Error downloading manifest:%@",error);
-
-			if (completionBlock) {
-				completionBlock(nil, error);
-			}
-
-			[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
-			bgTaskId = UIBackgroundTaskInvalid;
-		}
-	}];
+	AEMAssetDownloadInfo *info = [[AEMAssetDownloadInfo alloc] init];
+	info.taskIdentifier = manifestDataTask.taskIdentifier;
+	info.sessionIdentifier = self.urlSession.configuration.identifier;
+	info.remoteURL = manifestURL;
+	info.localPath = self.assetSource.latestManifestPath;
+	self.assetSourceSyncTaskDownloadInfo.assets[manifestURL.absoluteString] = info;
 
 	[manifestDataTask resume];
 
@@ -266,29 +218,29 @@ NS_ASSUME_NONNULL_BEGIN
 						   withParser:[self.assetSource.assetService createManifestParser]
 				  withCompletionBlock:parseExistingCompletionBlock];
 
-	void (^downloadCompletionBlock)(NSDictionary *, NSError *) = ^void(NSDictionary * results, NSError * error) {
-
-		__block NSInteger downloadBGTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithName:NSString.guidString expirationHandler:^{
-			[[UIApplication sharedApplication] endBackgroundTask:downloadBGTaskId];
-			downloadBGTaskId = UIBackgroundTaskInvalid;
-		}];
-
-		if (results.count) {
-			self.latestAssetSourceManifest = results;
-			[self updateToLatestManifest];
-
-		} else {
-			//TODO: Handle error
-		}
-
-		[[UIApplication sharedApplication] endBackgroundTask:downloadBGTaskId];
-		downloadBGTaskId = UIBackgroundTaskInvalid;
-	};
-
-	[self downloadLatestManifestWithCompletionBlock:downloadCompletionBlock];
+	[self downloadLatestManifest];
 
 	[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
 	bgTaskId = UIBackgroundTaskInvalid;
+}
+
+- (void)manifestDownloadCompletedWithResults:(NSDictionary * _Nullable )results withError:(NSError * _Nullable )error {
+
+	__block NSInteger downloadBGTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithName:NSString.guidString expirationHandler:^{
+		[[UIApplication sharedApplication] endBackgroundTask:downloadBGTaskId];
+		downloadBGTaskId = UIBackgroundTaskInvalid;
+	}];
+
+	if (results.count) {
+		self.latestAssetSourceManifest = results;
+		[self updateToLatestManifest];
+
+	} else {
+		[self notifyListenersAboutError:error];
+	}
+
+	[[UIApplication sharedApplication] endBackgroundTask:downloadBGTaskId];
+	downloadBGTaskId = UIBackgroundTaskInvalid;
 }
 
 - (void)queueResponseParser:(RemoteResponseParser *)responseParser {
@@ -407,6 +359,7 @@ NS_ASSUME_NONNULL_BEGIN
 		[self sortAssetsToDownload:assetsToDownload];
 
 		self.urlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
+		NSMutableArray *tasks = [NSMutableArray arrayWithCapacity:assetsToDownload.count];
 
 		for (NSDictionary *asset in assetsToDownload) {
 			NSURL *url = [NSURL URLWithString:asset[@"url"]];
@@ -422,14 +375,21 @@ NS_ASSUME_NONNULL_BEGIN
 			info.taskIdentifier = task.taskIdentifier;
 			info.sessionIdentifier = self.urlSession.configuration.identifier;
 			info.remoteURL = url;
-			info.localPath = [self.assetSource.rootFilePath stringByAppendingPathComponent:asset[@"localPath"]];
-			self.assetDownloadInfos[url.absoluteString] = info;
+			NSString *localPathFragment = asset[@"localPath"];
+			if (!localPathFragment) {
+				localPathFragment = url.path;
+			}
+			NSString *localPath = [self.assetSource.rootFilePath stringByAppendingPathComponent:localPathFragment];
+			info.localPath = localPath;
+			self.assetSourceSyncTaskDownloadInfo.assets[url.absoluteString] = info;
 
-			[task resume];
+			[tasks addObject:task];
 		}
 
-		if (self.inBackground) {
-			[self saveAssetDownloadInfos:nil];
+		[self.assetSourceSyncTaskDownloadInfo save];
+
+		for (NSURLSessionTask *task in tasks) {
+			[task resume];
 		}
 
 		[self.urlSession finishTasksAndInvalidate];
@@ -479,7 +439,7 @@ NS_ASSUME_NONNULL_BEGIN
 	double totalWritten = 0;
 	double totalExpectedToWrite = 0;
 
-	for (AEMAssetDownloadInfo *info in [self.assetDownloadInfos allValues]) {
+	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo.assets allValues]) {
 		totalWritten += info.sizeWritten;
 		totalExpectedToWrite += info.expectedSize;
 	}
@@ -489,7 +449,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSError *)assetDownloadInfosContainErrors {
 	NSError *error = nil;
-	for (AEMAssetDownloadInfo *info in [self.assetDownloadInfos allValues]) {
+	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo.assets allValues]) {
 		if (info.downloadError) {
 			error = info.downloadError;
 			break;
@@ -501,7 +461,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)assetDownloadInfosDownloadCompleted {
 	BOOL downloadCompleted = YES;
-	for (AEMAssetDownloadInfo *info in [self.assetDownloadInfos allValues]) {
+	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo.assets allValues]) {
 		if (!info.downloadComplete) {
 			downloadCompleted = NO;
 			break;
@@ -531,16 +491,13 @@ NS_ASSUME_NONNULL_BEGIN
 				ASSERT_FAIL(@"");
 			}
 
-			if ([[NSFileManager defaultManager] removeItemAtPath:self.cachedAssetDownloadInfosPath error:&error]) {
-				//TODO: Handle error
-				ASSERT_FAIL(@"");
-			}
+			[self.assetSourceSyncTaskDownloadInfo remove];
 		});
 
 		NSLog(@"AEMAssetSourceSyncTask:%@ succeeded", self.assetSource.identifier);
 		[self notifyListenersAboutSuccess];
 	} else {
-		NSLog(@"[AEMAssetSourceSyncTask taskCompletedSuccessfully] for identifier:%@ called but waiting for these tasks deleteTaskCompleted:%@ downloadTasksCompleted:%@",self.assetSource.identifier, @(!self.deleteTaskCompleted), @(!self.downloadTasksCompleted));
+		NSLog(@"[AEMAssetSourceSyncTask taskCompletedSuccessfully] for identifier:%@ called but something not completed deleteTaskCompleted:%@ downloadTasksCompleted:%@",self.assetSource.identifier, @(self.deleteTaskCompleted), @(self.downloadTasksCompleted));
 	}
 }
 
@@ -648,57 +605,112 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSLog(@"URLSession:downloadTask:didFinishDownloadingToURL: %@",downloadTask.originalRequest.URL);
 
-	AEMAssetDownloadInfo *downloadInfo = self.assetDownloadInfos[downloadTask.originalRequest.URL.absoluteString];
+	AEMAssetDownloadInfo *downloadInfo = self.assetSourceSyncTaskDownloadInfo.assets[downloadTask.originalRequest.URL.absoluteString];
 
-	ASSERT([downloadTask.response isKindOfClass:NSHTTPURLResponse.class], @"wrong response class");
+	if ([[downloadInfo.remoteURL absoluteString] isEqualToString:[[self manifestURL] absoluteString]]) {
 
-	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)downloadTask.response;
-	
-	NSError *error = [self convertHTTPResponseToError:httpResponse];
+		NSLog(@"MANIFEST - URLSession:downloadTask:didFinishDownloadingToURL: %@",downloadTask.originalRequest.URL);
 
-	if (error == nil) {
 		downloadInfo.downloadComplete = YES;
 
-		NSURL *assetLocationURL = [NSURL fileURLWithPath:downloadInfo.localPath];
+		[self.assetSourceSyncTaskDownloadInfo save];
 
-		if (assetLocationURL == nil) {
+		NSError *error = nil;
+
+		NSData *data = [NSData dataWithContentsOfFile:location.path];
+
+		if ([[NSFileManager defaultManager] fileExistsAtPath:self.assetSource.latestManifestPath]) {
+			if (![[NSFileManager defaultManager] removeItemAtPath:self.assetSource.latestManifestPath error:&error]) {
+				//TODO: Handle error
+				ASSERT_FAIL(@"");
+			}
+		}
+
+		id json = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
+		if (error) {
 			//TODO: Handle error
 			ASSERT_FAIL(@"");
 		}
 
-		NSError *error = nil;
-
-		if (![[NSFileManager defaultManager] createDirectoryAtPath:[downloadInfo.localPath stringByDeletingLastPathComponent]  withIntermediateDirectories:YES attributes:nil error:&error]) {
+		if (![[json JSONRepresentation] writeToFile:self.assetSource.latestManifestPath atomically:YES encoding:NSUTF8StringEncoding error:&error]) {
 			//TODO: Handle error
-			if (![error.domain isEqualToString:NSCocoaErrorDomain] ||
-				error.code == NSFileWriteFileExistsError) {
-				ASSERT_FAIL(@"%@", error);
-			}
+			ASSERT_FAIL(@"");
 		}
 
-		if ([[NSFileManager defaultManager] fileExistsAtPath:downloadInfo.localPath]) {
-			if (![[NSFileManager defaultManager] removeItemAtURL:assetLocationURL error:&error]) {
+		RemoteResponseParser *parser = [self.assetSource.assetService createManifestParser];
+
+		[parser updateWithResponse:(NSHTTPURLResponse *)downloadTask.response responseObject:json completionBlock:^(NSArray *parseArray, NSError *error) {
+
+			NSLog(@"MANIFEST - parse completed with error: %@",error);
+
+
+			if (parseArray.count) {
+				[self manifestDownloadCompletedWithResults:parseArray[0] withError:nil];
+			} else {
+				[self manifestDownloadCompletedWithResults:nil withError:error];
+			}
+
+			[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
+			bgTaskId = UIBackgroundTaskInvalid;
+
+		}];
+
+		[self queueResponseParser:parser];
+
+	} else {
+
+		NSLog(@"ASSET - URLSession:downloadTask:didFinishDownloadingToURL: %@",downloadTask.originalRequest.URL);
+
+		ASSERT([downloadTask.response isKindOfClass:NSHTTPURLResponse.class], @"wrong response class");
+
+		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)downloadTask.response;
+
+		NSError *error = [self convertHTTPResponseToError:httpResponse];
+
+		if (error == nil) {
+			downloadInfo.downloadComplete = YES;
+
+			NSURL *assetLocationURL = [NSURL fileURLWithPath:downloadInfo.localPath];
+
+			if (assetLocationURL == nil) {
+				//TODO: Handle error
+				ASSERT_FAIL(@"");
+			}
+
+			NSError *error = nil;
+
+			if (![[NSFileManager defaultManager] createDirectoryAtPath:[downloadInfo.localPath stringByDeletingLastPathComponent]  withIntermediateDirectories:YES attributes:nil error:&error]) {
+				//TODO: Handle error
+				if (![error.domain isEqualToString:NSCocoaErrorDomain] ||
+					error.code == NSFileWriteFileExistsError) {
+					ASSERT_FAIL(@"%@", error);
+				}
+			}
+
+			if ([[NSFileManager defaultManager] fileExistsAtPath:downloadInfo.localPath]) {
+				if (![[NSFileManager defaultManager] removeItemAtURL:assetLocationURL error:&error]) {
+					//TODO: Handle error
+					ASSERT_FAIL(@"%@", error);
+				};
+			}
+
+			NSLog(@"Moving item: %@\nto location: %@",downloadInfo.remoteURL, downloadInfo.localPath);
+
+			if (![[NSFileManager defaultManager] moveItemAtURL:location toURL:assetLocationURL error:&error]) {
 				//TODO: Handle error
 				ASSERT_FAIL(@"%@", error);
-			};
+			}
+		} else {
+			downloadInfo.downloadError = error;
+
+			[self.urlSession invalidateAndCancel];
 		}
 
-		if (![[NSFileManager defaultManager] moveItemAtURL:location toURL:assetLocationURL error:&error]) {
-			//TODO: Handle error
-			ASSERT_FAIL(@"%@", error);
-		}
-	} else {
-		downloadInfo.downloadError = error;
+		[self.assetSourceSyncTaskDownloadInfo save];
 
-		[self.urlSession invalidateAndCancel];
+		[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
+		bgTaskId = UIBackgroundTaskInvalid;
 	}
-
-	if (self.inBackground) {
-		[self saveAssetDownloadInfos:nil];
-	}
-
-	[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
-	bgTaskId = UIBackgroundTaskInvalid;
 }
 
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
@@ -711,7 +723,7 @@ NS_ASSUME_NONNULL_BEGIN
 		bgTaskId = UIBackgroundTaskInvalid;
 	}];
 
-	AEMAssetDownloadInfo *downloadInfo = self.assetDownloadInfos[downloadTask.originalRequest.URL.absoluteString];
+	AEMAssetDownloadInfo *downloadInfo = self.assetSourceSyncTaskDownloadInfo.assets[downloadTask.originalRequest.URL.absoluteString];
 
 	downloadInfo.expectedSize = totalBytesExpectedToWrite;
 	downloadInfo.sizeWritten = totalBytesWritten;
@@ -739,18 +751,21 @@ didCompleteWithError:(nullable NSError *)error {
 
 	NSLog(@"URLSession:%@ task:%@ didBecomeInvalidWithError:%@",session, task, error);
 
-	AEMAssetDownloadInfo *downloadInfo = self.assetDownloadInfos[task.originalRequest.URL.absoluteString];
+	AEMAssetDownloadInfo *downloadInfo = self.assetSourceSyncTaskDownloadInfo.assets[task.originalRequest.URL.absoluteString];
 
-	if (error == nil && !downloadInfo.downloadError) {
-		downloadInfo.downloadComplete = YES;
+	if ([downloadInfo.remoteURL isEqual:[self manifestURL]]) {
+
 	} else {
-		downloadInfo.downloadError = downloadInfo.downloadError ?: error;
 
-		[self.urlSession invalidateAndCancel];
-	}
+		if (error == nil && !downloadInfo.downloadError) {
+			downloadInfo.downloadComplete = YES;
+		} else {
+			downloadInfo.downloadError = downloadInfo.downloadError ?: error;
 
-	if (self.inBackground) {
-		[self saveAssetDownloadInfos:nil];
+			[self.urlSession invalidateAndCancel];
+		}
+
+		[self.assetSourceSyncTaskDownloadInfo save];
 	}
 
 	[[UIApplication sharedApplication] endBackgroundTask:bgTaskId];

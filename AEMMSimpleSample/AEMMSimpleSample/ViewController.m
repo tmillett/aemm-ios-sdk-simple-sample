@@ -8,8 +8,14 @@
 
 #import "ViewController.h"
 #import <AEMMSDK/AEMMSDK.h>
+#import "AEMTaskListener.h"
 
 @interface ViewController ()
+
+@property (nonatomic, strong) AEMTaskListener *listener;
+@property (nonatomic, strong) AEMAssetSource *source;
+@property (nonatomic, strong) AEMAssetSourceSyncTask *task;
+@property (nonatomic, strong) AEMAssetSourceFactory *factory;
 
 @end
 
@@ -18,15 +24,47 @@
 - (void)viewDidLoad {
 	[super viewDidLoad];
 
-	AEMAssetSourceFactory *factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"file:///Users/tmillett/_dev/git/aemm-ios-sdk-simple-sample/AEMMSimpleSample"]];
-	NSArray *dirpaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-	NSString *dirpath = [dirpaths objectAtIndex:0];
+	NSMutableArray *leftBtns = [[NSMutableArray alloc] init];
 
-	AEMAssetSource *source = [factory createAssetSourceWithIdentifier:@"id1" withRootFilePath:dirpath];
-	[source syncInBackground:YES];
+	UIBarButtonItem *leftBtn = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(leftButtonPressed)];
+	[leftBtns addObject:leftBtn];
+
+	[self.navigationItem setLeftBarButtonItems:leftBtns animated:NO];
+
+	NSMutableArray *rightBtns = [[NSMutableArray alloc] init];
+
+	UIBarButtonItem *rightBtn = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPlay target:self action:@selector(rightButtonPressed)];
+	[rightBtns addObject:rightBtn];
+
+	[self.navigationItem setRightBarButtonItems:rightBtns animated:NO];
+
+
 
 
 }
+
+-(void)leftButtonPressed
+{
+	int *x = NULL;
+	*x = 42;
+}
+
+-(void)rightButtonPressed
+{
+	NSLog(@"Left Button Tapped");
+
+	self.factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"http://pepsi.sea.adobe.com/stage/tmillett/aemmsdk"]];
+	NSArray *dirpaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+	NSString *dirpath = [dirpaths objectAtIndex:0];
+
+	self.source = [self.factory createAssetSourceWithIdentifier:@"hotel1" withRootFilePath:dirpath];
+	self.task = [self.source syncInBackground:YES];
+	self.listener = [[AEMTaskListener alloc] init];
+
+	[self.task addSuccessListener:self.listener];
+	[self.task addErrorListener:self.listener];
+}
+
 
 
 - (void)didReceiveMemoryWarning {

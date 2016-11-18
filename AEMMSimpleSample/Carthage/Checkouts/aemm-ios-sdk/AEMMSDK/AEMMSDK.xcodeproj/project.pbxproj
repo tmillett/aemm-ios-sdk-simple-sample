@@ -8,10 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		D30EC0D81DC28A53008FF2AC /* AEMAssetSource+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = D30EC0D61DC28A53008FF2AC /* AEMAssetSource+Internal.h */; };
-		D312C70F1DB6AF920018833E /* AFNetworking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D312C70E1DB6AF920018833E /* AFNetworking.framework */; };
 		D31B215F1DCD14450071A87B /* AEMAssetSourceFactoryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D31B215E1DCD14450071A87B /* AEMAssetSourceFactoryTests.m */; };
 		D31B21681DCD221B0071A87B /* BaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D31B21671DCD221B0071A87B /* BaseTest.m */; };
 		D31B216A1DCD22250071A87B /* testfiles in Resources */ = {isa = PBXBuildFile; fileRef = D31B21691DCD22250071A87B /* testfiles */; };
+		D36EF0101DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */; };
+		D36EF0111DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */; };
 		D3AB17B51DB985BD00C933B0 /* AEMAssetService.h in Headers */ = {isa = PBXBuildFile; fileRef = D3AB17B31DB985BD00C933B0 /* AEMAssetService.h */; };
 		D3AB17B61DB985BD00C933B0 /* AEMAssetService.m in Sources */ = {isa = PBXBuildFile; fileRef = D3AB17B41DB985BD00C933B0 /* AEMAssetService.m */; };
 		D3AB17BF1DBAA7E900C933B0 /* AEMTask+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = D3AB17BD1DBAA7E900C933B0 /* AEMTask+Internal.h */; };
@@ -83,13 +84,13 @@
 
 /* Begin PBXFileReference section */
 		D30EC0D61DC28A53008FF2AC /* AEMAssetSource+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AEMAssetSource+Internal.h"; path = "Classes/AEMAssetSource+Internal.h"; sourceTree = "<group>"; };
-		D312C70E1DB6AF920018833E /* AFNetworking.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AFNetworking.framework; path = AEMMSDK/Carthage/Build/iOS/AFNetworking.framework; sourceTree = "<group>"; };
-		D312C7181DB6BEC90018833E /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; path = tools; sourceTree = "<group>"; };
 		D31B215B1DCC0BB10071A87B /* AEMAssetSourceSyncTask+Testing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AEMAssetSourceSyncTask+Testing.h"; sourceTree = "<group>"; };
 		D31B215E1DCD14450071A87B /* AEMAssetSourceFactoryTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEMAssetSourceFactoryTests.m; sourceTree = "<group>"; };
 		D31B21661DCD221B0071A87B /* BaseTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseTest.h; sourceTree = "<group>"; };
 		D31B21671DCD221B0071A87B /* BaseTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BaseTest.m; sourceTree = "<group>"; };
 		D31B21691DCD22250071A87B /* testfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = testfiles; sourceTree = "<group>"; };
+		D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEMAssetSourceSyncTaskDownloadInfo.h; path = Classes/AEMAssetSourceSyncTaskDownloadInfo.h; sourceTree = "<group>"; };
+		D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AEMAssetSourceSyncTaskDownloadInfo.m; path = Classes/AEMAssetSourceSyncTaskDownloadInfo.m; sourceTree = "<group>"; };
 		D3AB17B31DB985BD00C933B0 /* AEMAssetService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEMAssetService.h; path = Classes/AEMAssetService.h; sourceTree = "<group>"; };
 		D3AB17B41DB985BD00C933B0 /* AEMAssetService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AEMAssetService.m; path = Classes/AEMAssetService.m; sourceTree = "<group>"; };
 		D3AB17BD1DBAA7E900C933B0 /* AEMTask+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AEMTask+Internal.h"; path = "Classes/AEMTask+Internal.h"; sourceTree = "<group>"; };
@@ -143,7 +144,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D312C70F1DB6AF920018833E /* AFNetworking.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,7 +163,6 @@
 			isa = PBXGroup;
 			children = (
 				D3FE06101DB841CA0011D747 /* OHHTTPStubs.framework */,
-				D312C70E1DB6AF920018833E /* AFNetworking.framework */,
 			);
 			name = Frameworks;
 			path = ..;
@@ -176,7 +175,6 @@
 				D3C202F41DB04319005BED65 /* AEMMSDKTests */,
 				D3C202E81DB04319005BED65 /* Products */,
 				D3214DF51DB1519E00DA9B44 /* Frameworks */,
-				D312C7181DB6BEC90018833E /* tools */,
 			);
 			sourceTree = "<group>";
 		};
@@ -223,6 +221,8 @@
 				D3AB17B41DB985BD00C933B0 /* AEMAssetService.m */,
 				D30EC0D61DC28A53008FF2AC /* AEMAssetSource+Internal.h */,
 				D3BED1831DB0572300DBBF52 /* AEMAssetSourceSyncTask+Internal.h */,
+				D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */,
+				D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */,
 				D3AB17BD1DBAA7E900C933B0 /* AEMTask+Internal.h */,
 				D3DCA18D1DC3CF7F0002451F /* Debugging */,
 				D3DCA1731DC3C9200002451F /* Helpers */,
@@ -313,6 +313,7 @@
 				D3DCA17D1DC3CCFE0002451F /* NSPointerArray+Helpers.h in Headers */,
 				D3DCA1881DC3CD080002451F /* RemoteResponseParser+Internal.h in Headers */,
 				D3DCA1941DC3CFE00002451F /* NSURL+Helpers.h in Headers */,
+				D36EF0101DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h in Headers */,
 				D3DCA17F1DC3CCFE0002451F /* NSString+Helpers.h in Headers */,
 				D3AB17B51DB985BD00C933B0 /* AEMAssetService.h in Headers */,
 				D3DCA1981DC3D0870002451F /* NSError+Helpers.h in Headers */,
@@ -346,7 +347,6 @@
 				D3C202E31DB04319005BED65 /* Frameworks */,
 				D3C202E41DB04319005BED65 /* Headers */,
 				D3C202E51DB04319005BED65 /* Resources */,
-				D312C7101DB6AFAB0018833E /* Carthage Copy Frameworks */,
 			);
 			buildRules = (
 			);
@@ -431,23 +431,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		D312C7101DB6AFAB0018833E /* Carthage Copy Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Carthage Copy Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/tools/carthage_copy.sh\"";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		D3C202E21DB04319005BED65 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -468,6 +451,7 @@
 				D3DCA1951DC3CFE00002451F /* NSURL+Helpers.m in Sources */,
 				D3DCA1991DC3D0870002451F /* NSError+Helpers.m in Sources */,
 				D3DCA17C1DC3CCFE0002451F /* JSONHelpers.m in Sources */,
+				D36EF0111DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m in Sources */,
 				D3C203041DB04490005BED65 /* AEMAssetSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
