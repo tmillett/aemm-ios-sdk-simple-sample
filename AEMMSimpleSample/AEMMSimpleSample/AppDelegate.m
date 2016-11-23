@@ -24,6 +24,12 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	// Override point for customization after application launch.
+
+	NSArray *dirpaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+	NSString *dirpath = [dirpaths objectAtIndex:0];
+
+	NSLog(@"cache location:%@",dirpath);
+	
 	return YES;
 }
 

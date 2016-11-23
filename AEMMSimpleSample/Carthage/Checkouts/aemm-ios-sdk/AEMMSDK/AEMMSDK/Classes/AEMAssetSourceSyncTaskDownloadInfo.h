@@ -17,27 +17,26 @@
  * from Adobe Systems Incorporated.
  **************************************************************************/
 
-#import <AEMMSDK/AEMMSDK.h>
+#import <Foundation/Foundation.h>
+
+@class AEMAssetSource;
+@class AEMAssetService;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class AEMAssetService;
+@interface AEMAssetSourceSyncTaskDownloadInfo : NSObject
 
-@interface AEMAssetSource (Internal)
++ (instancetype)assetSourceSyncTaskDownloadInfoWithSessionIdentifier:(NSString *)sessionIdentifier withAssetService:(AEMAssetService *)assetService;
 
-+ (instancetype)assetSourceFromDictionary:(NSDictionary *)assetSourceDict withAssetService:(AEMAssetService *)assetService;
++ (instancetype)assetSourceSyncTaskDownloadInfoWithSessionIdentifier:(NSString *)sessionIdentifier withAssetSource:(AEMAssetSource *)assetSource;
 
-- (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath withAssetService:(AEMAssetService *)assetService;
+@property (nonatomic, strong, readonly) AEMAssetSource *assetSource;
+@property (nonatomic, strong, readonly) NSMutableDictionary *assets;
 
-- (NSURLSession *)createURLSessionInBackground:(BOOL)inBackground;
+- (void)save;
 
-@property (nonatomic, weak, readonly) AEMAssetService *assetService;
-@property (nonatomic, strong, readonly) NSURL *manifestURL;
-@property (nonatomic, readonly) NSString *existingManifestPath;
-@property (nonatomic, readonly) NSString *latestManifestPath;
-
-- (NSDictionary *)toDictionary;
-
-@end
+- (void)remove;
 
 NS_ASSUME_NONNULL_END
+
+@end

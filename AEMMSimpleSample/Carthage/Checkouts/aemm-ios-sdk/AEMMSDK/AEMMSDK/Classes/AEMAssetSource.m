@@ -26,7 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface AEMAssetSource ()
 
 @property (nonatomic, strong) NSString *identifier;
-@property (nonatomic, strong) NSString *base64Identifier;
 @property (nonatomic, strong) NSURL *baseURL;
 @property (nonatomic, strong) NSString *rootFilePath;
 @property (nonatomic, weak) AEMAssetService *assetService;
@@ -34,6 +33,17 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @implementation AEMAssetSource
+
++ (instancetype)assetSourceFromDictionary:(NSDictionary *)assetSourceDict withAssetService:(AEMAssetService *)assetService {
+	AEMAssetSource *assetSource = nil;
+	@try {
+		assetSource = [[AEMAssetSource alloc] initWithIdentifier:assetSourceDict[@"identifier"] withRootFilePath:assetSourceDict[@"rootFilePath"] withAssetService:assetService];
+	} @catch (NSException *exception) {
+
+	} @finally {
+		return assetSource;
+	}
+}
 
 - (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath withAssetService:(AEMAssetService *)assetService
 {
@@ -49,9 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (!fileURL || ![fileURL isFileURL] || ![fileURL checkResourceIsReachableAndReturnError:&fileIOError] ) {
 			@throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"rootFilePath must be reachable" userInfo:nil];
 		}
-		NSData *identifierData = [self.identifier dataUsingEncoding:NSUTF8StringEncoding];
-		self.base64Identifier = [identifierData base64EncodedStringWithOptions:kNilOptions];
-		self.rootFilePath = [rootFilePath stringByAppendingPathComponent:self.base64Identifier];
+		self.rootFilePath = rootFilePath;
 
 		if (![[NSFileManager defaultManager] createDirectoryAtPath:self.rootFilePath withIntermediateDirectories:YES attributes:nil error:&fileIOError]) {
 			//TODO: Handle error
@@ -74,6 +82,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)latestManifestPath {
 	return [self.rootFilePath stringByAppendingPathComponent:@"latestManifest.json"];
+}
+
+- (NSDictionary *)toDictionary {
+	return @{@"identifier" : self.identifier, @"rootFilePath" : self.rootFilePath};
 }
 
 #pragma mark - Equality
