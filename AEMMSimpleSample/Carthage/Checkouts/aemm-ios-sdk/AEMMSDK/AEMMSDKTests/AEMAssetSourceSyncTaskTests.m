@@ -23,6 +23,10 @@
 #import "HttpHeaders.h"
 #import "AEMAssetSourceSyncTask+Testing.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
+static NSString * const kAssetSourceRelativeCachePath = @"~/Library/Caches/contentCache/id1";
+
 @interface AEMTaskListener : NSObject <AEMTaskSuccessListener, AEMTaskProgressListener, AEMTaskErrorListener>
 @end
 
@@ -55,8 +59,7 @@
 	// This test pulls down the same manifest content twice to
 	// ensure content is not downloaded twice
 
-	NSString *cachesDirectory = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-	NSString* localRootPath = [cachesDirectory stringByAppendingPathComponent:@"contentCache/id1"];
+	NSString* localRootPath = [kAssetSourceRelativeCachePath stringByExpandingTildeInPath];
 
 	NSError* fileRemoveError = nil;
 	BOOL success = [[NSFileManager defaultManager] removeItemAtPath:localRootPath error:&fileRemoveError];
@@ -90,7 +93,7 @@
 
 	AEMAssetSourceFactory *factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"http://mywebservice.com"]];
 
-	AEMAssetSource *assetSource = [factory createAssetSourceWithIdentifier:@"id1" withRootFilePath:localRootPath];
+	AEMAssetSource *assetSource = [factory createAssetSourceWithIdentifier:@"id1" withRelativeCachePath:kAssetSourceRelativeCachePath];
 
 	AEMAssetSourceSyncTask *task = [assetSource syncInBackground:NO];
 
@@ -103,10 +106,10 @@
 		AEMAssetSourceSyncTask* task = notification.object;
 		XCTAssert([task isKindOfClass:AEMAssetSourceSyncTask.class]);
 		BOOL isDir = NO;
-		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.rootFilePath isDirectory:&isDir]);
+		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.relativeCachePath isDirectory:&isDir]);
 		XCTAssertTrue(isDir);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"]] checkResourceIsReachableAndReturnError:nil]);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
 
 		XCTAssertEqual(task.assetsAdded.count, 2);
 
@@ -124,10 +127,10 @@
 		AEMAssetSourceSyncTask* task = notification.object;
 		XCTAssert([task isKindOfClass:AEMAssetSourceSyncTask.class]);
 		BOOL isDir = NO;
-		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.rootFilePath isDirectory:&isDir]);
+		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.relativeCachePath isDirectory:&isDir]);
 		XCTAssertTrue(isDir);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"]] checkResourceIsReachableAndReturnError:nil]);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
 
 		XCTAssertEqual(task.assetsAdded.count, 0);
 
@@ -145,8 +148,7 @@
 	// This test pulls down a manifest and downloads content,
 	// then downloads an updated manifest content twice to change, remove, and add content
 
-	NSString *cachesDirectory = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-	NSString* localRootPath = [cachesDirectory stringByAppendingPathComponent:@"contentCache/id1"];
+	NSString* localRootPath = [kAssetSourceRelativeCachePath stringByExpandingTildeInPath];
 
 	NSError* fileRemoveError = nil;
 	BOOL success = [[NSFileManager defaultManager] removeItemAtPath:localRootPath error:&fileRemoveError];
@@ -198,7 +200,7 @@
 
 	AEMAssetSourceFactory *factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"http://mywebservice.com"]];
 
-	AEMAssetSource *assetSource = [factory createAssetSourceWithIdentifier:@"id1" withRootFilePath:localRootPath];
+	AEMAssetSource *assetSource = [factory createAssetSourceWithIdentifier:@"id1" withRelativeCachePath:kAssetSourceRelativeCachePath];
 
 	AEMAssetSourceSyncTask *task = [assetSource syncInBackground:NO];
 
@@ -211,10 +213,10 @@
 		AEMAssetSourceSyncTask* task = notification.object;
 		XCTAssert([task isKindOfClass:AEMAssetSourceSyncTask.class]);
 		BOOL isDir = NO;
-		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.rootFilePath isDirectory:&isDir]);
+		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.relativeCachePath isDirectory:&isDir]);
 		XCTAssertTrue(isDir);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"]] checkResourceIsReachableAndReturnError:nil]);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
 
 		XCTAssertEqual(task.assetsAdded.count, 2);
 
@@ -232,11 +234,11 @@
 		AEMAssetSourceSyncTask* task = notification.object;
 		XCTAssert([task isKindOfClass:AEMAssetSourceSyncTask.class]);
 		BOOL isDir = NO;
-		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.rootFilePath isDirectory:&isDir]);
+		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.relativeCachePath isDirectory:&isDir]);
 		XCTAssertTrue(isDir);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"]] checkResourceIsReachableAndReturnError:nil]);
-		XCTAssertFalse([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"]] checkResourceIsReachableAndReturnError:nil]);
-		XCTAssertTrue([[NSURL fileURLWithPath:[assetSource.rootFilePath stringByAppendingPathComponent:@"imgs/bg_hotel_room-3.png"]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_room.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertFalse([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_facade-1.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
+		XCTAssertTrue([[NSURL fileURLWithPath:[[assetSource.relativeCachePath stringByAppendingPathComponent:@"imgs/bg_hotel_room-3.png"] stringByExpandingTildeInPath]] checkResourceIsReachableAndReturnError:nil]);
 
 		XCTAssertEqual(task.assetsAdded.count, 1);
 		XCTAssertEqual(task.assetsRemoved.count, 1);
@@ -256,8 +258,7 @@
 	// This test pulls down the same manifest content twice to
 	// ensure content is not downloaded twice
 
-	NSString *cachesDirectory = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-	NSString* localRootPath = [cachesDirectory stringByAppendingPathComponent:@"contentCache/id1"];
+	NSString* localRootPath = [kAssetSourceRelativeCachePath stringByExpandingTildeInPath];
 
 	NSError* fileRemoveError = nil;
 	BOOL success = [[NSFileManager defaultManager] removeItemAtPath:localRootPath error:&fileRemoveError];
@@ -291,7 +292,7 @@
 
 	AEMAssetSourceFactory *factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:[NSURL URLWithString:@"http://mywebservice.com"]];
 
-	AEMAssetSource *assetSource = [factory createAssetSourceWithIdentifier:@"id1" withRootFilePath:localRootPath];
+	AEMAssetSource *assetSource = [factory createAssetSourceWithIdentifier:@"id1" withRelativeCachePath:kAssetSourceRelativeCachePath];
 
 	AEMAssetSourceSyncTask *task = [assetSource syncInBackground:NO];
 
@@ -304,7 +305,7 @@
 		AEMAssetSourceSyncTask* task = notification.object;
 		XCTAssert([task isKindOfClass:AEMAssetSourceSyncTask.class]);
 		BOOL isDir = NO;
-		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.rootFilePath isDirectory:&isDir]);
+		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:assetSource.relativeCachePath isDirectory:&isDir]);
 		XCTAssertTrue(isDir);
 
 		XCTAssertEqual(task.assetsAdded.count, 2);
@@ -331,7 +332,7 @@
 	[[NSFileManager defaultManager] createDirectoryAtPath:localRootPath withIntermediateDirectories:YES attributes:nil error:nil];
 
 
-	AEMAssetSource *source = [factory createAssetSourceWithIdentifier:@"hotel1" withRootFilePath:localRootPath];
+	AEMAssetSource *source = [factory createAssetSourceWithIdentifier:@"hotel1" withRelativeCachePath:@"contentCache"];
 	AEMAssetSourceSyncTask *task = [source syncInBackground:YES];
 	AEMTaskListener *taskListener = [[AEMTaskListener alloc] init];
 	[task addSuccessListener:taskListener];
@@ -342,7 +343,7 @@
 		AEMAssetSourceSyncTask* task = notification.object;
 		XCTAssert([task isKindOfClass:AEMAssetSourceSyncTask.class]);
 		BOOL isDir = NO;
-		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:task.assetSource.rootFilePath isDirectory:&isDir]);
+		XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:task.assetSource.relativeCachePath isDirectory:&isDir]);
 		XCTAssertTrue(isDir);
 
 		return YES;
@@ -358,3 +359,5 @@
 
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -27,14 +27,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)assetSourceFromDictionary:(NSDictionary *)assetSourceDict withAssetService:(AEMAssetService *)assetService;
 
-- (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath withAssetService:(AEMAssetService *)assetService;
+- (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRelativeCachePath:(NSString *)relativeCachePath withAssetService:(AEMAssetService *)assetService;
 
 - (NSURLSession *)createURLSessionInBackground:(BOOL)inBackground;
 
 @property (nonatomic, weak, readonly) AEMAssetService *assetService;
 @property (nonatomic, strong, readonly) NSURL *manifestURL;
-@property (nonatomic, readonly) NSString *existingManifestPath;
-@property (nonatomic, readonly) NSString *latestManifestPath;
+@property (nonatomic, readonly) NSString *existingManifestRelativePath;
+@property (nonatomic, readonly) NSString *latestManifestRelativePath;
+@property (nonatomic, readonly) NSString *relativeCachePath;
 
 - (NSDictionary *)toDictionary;
 

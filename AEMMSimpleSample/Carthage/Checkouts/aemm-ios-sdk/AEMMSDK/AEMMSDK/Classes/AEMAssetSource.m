@@ -23,11 +23,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+NSString * const kAEMAssetSourceIdentifierKey = @"identifier";
+NSString * const kAEMAssetSourceRelativeCachePathKey = @"relativeCachePath";
+
 @interface AEMAssetSource ()
 
 @property (nonatomic, strong) NSString *identifier;
 @property (nonatomic, strong) NSURL *baseURL;
-@property (nonatomic, strong) NSString *rootFilePath;
+@property (nonatomic, strong) NSString *relativeCachePath;
 @property (nonatomic, weak) AEMAssetService *assetService;
 
 @end
@@ -37,15 +40,17 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)assetSourceFromDictionary:(NSDictionary *)assetSourceDict withAssetService:(AEMAssetService *)assetService {
 	AEMAssetSource *assetSource = nil;
 	@try {
-		assetSource = [[AEMAssetSource alloc] initWithIdentifier:assetSourceDict[@"identifier"] withRootFilePath:assetSourceDict[@"rootFilePath"] withAssetService:assetService];
+		NSLog(@"id: %@ class: %@",assetSourceDict[kAEMAssetSourceIdentifierKey], NSStringFromClass([assetSourceDict[kAEMAssetSourceIdentifierKey] class]));
+		assetSource = [[AEMAssetSource alloc] initWithIdentifier:assetSourceDict[kAEMAssetSourceIdentifierKey] withRelativeCachePath:assetSourceDict[kAEMAssetSourceRelativeCachePathKey] withAssetService:assetService];
 	} @catch (NSException *exception) {
+		NSLog(@"Could not create assetSource with assetSourceDict:%@ exception:%@", assetSourceDict, exception);
 
 	} @finally {
 		return assetSource;
 	}
 }
 
-- (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath withAssetService:(AEMAssetService *)assetService
+- (AEMAssetSource *)initWithIdentifier:(NSString *)identifier withRelativeCachePath:(NSString *)relativeCachePath withAssetService:(AEMAssetService *)assetService
 {
 	if (self = [super init]) {
 		if (identifier.length < 1) {
@@ -53,15 +58,21 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 		self.identifier = identifier;
 
+		if (![relativeCachePath hasPrefix:@"~/"]) {
+			@throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"relativeCachePath must begin with ~/" userInfo:nil];
+		}
+
+		self.relativeCachePath = relativeCachePath;
+
 		NSError *fileIOError = nil;
 
-		NSURL *fileURL = [NSURL fileURLWithPath:rootFilePath];
+		NSURL *fileURL = [NSURL fileURLWithPath:[self.relativeCachePath stringByExpandingTildeInPath] isDirectory:YES];
 		if (!fileURL || ![fileURL isFileURL] || ![fileURL checkResourceIsReachableAndReturnError:&fileIOError] ) {
-			@throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"rootFilePath must be reachable" userInfo:nil];
+			@throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"relativeCachePath must be reachable" userInfo:nil];
 		}
-		self.rootFilePath = rootFilePath;
 
-		if (![[NSFileManager defaultManager] createDirectoryAtPath:self.rootFilePath withIntermediateDirectories:YES attributes:nil error:&fileIOError]) {
+
+		if (![[NSFileManager defaultManager] createDirectoryAtPath:[self.relativeCachePath stringByExpandingTildeInPath] withIntermediateDirectories:YES attributes:nil error:&fileIOError]) {
 			//TODO: Handle error
 			ASSERT_FAIL(@"");
 		}
@@ -76,23 +87,23 @@ NS_ASSUME_NONNULL_BEGIN
 	return [[AEMAssetSourceSyncTask alloc] initWithAssetSource:self inBackground:inBackground];
 }
 
-- (NSString *)existingManifestPath {
-	return [self.rootFilePath stringByAppendingPathComponent:@"manifest.json"];
+- (NSString *)existingManifestRelativePath {
+	return [self.relativeCachePath stringByAppendingPathComponent:@"manifest.json"];
 }
 
-- (NSString *)latestManifestPath {
-	return [self.rootFilePath stringByAppendingPathComponent:@"latestManifest.json"];
+- (NSString *)latestManifestRelativePath {
+	return [self.relativeCachePath stringByAppendingPathComponent:@"latestManifest.json"];
 }
 
 - (NSDictionary *)toDictionary {
-	return @{@"identifier" : self.identifier, @"rootFilePath" : self.rootFilePath};
+	return @{kAEMAssetSourceIdentifierKey : self.identifier, kAEMAssetSourceRelativeCachePathKey : self.relativeCachePath};
 }
 
 #pragma mark - Equality
 
 - (BOOL)isEqualToAssetSource:(AEMAssetSource *)otherSource {
 	return	[self.identifier isEqualToString:otherSource.identifier] &&
-			[self.rootFilePath isEqualToString:otherSource.rootFilePath];
+			[self.relativeCachePath isEqualToString:otherSource.relativeCachePath];
 }
 
 - (BOOL)isEqual:(id)object {
@@ -108,7 +119,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (NSUInteger)hash {
-	return [self.identifier hash] ^ [self.rootFilePath hash];
+	return [self.identifier hash] ^ [self.relativeCachePath hash];
 }
 
 @end

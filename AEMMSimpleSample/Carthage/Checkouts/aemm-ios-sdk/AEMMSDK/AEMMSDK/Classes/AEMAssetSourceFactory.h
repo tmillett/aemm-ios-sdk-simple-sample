@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)createAssetSourceFactoryWithBaseURL:(NSURL *)url;
 
-- (id)createAssetSourceWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath;
+- (id)createAssetSourceWithIdentifier:(NSString *)identifier withRelativeCachePath:(NSString *)relativeCachePath;
 
 - (id)createAssetSourceSyncTaskWithBackgroundURLSessionIdentifier:(NSString *)urlSessionIdentifier withBackgroundCompletionHandler:(void (^)())completionHandler;
 @end

@@ -21,6 +21,7 @@
 
 @class AEMAssetSource;
 @class AEMAssetService;
+@class AEMAssetDownloadInfo;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,7 +32,15 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)assetSourceSyncTaskDownloadInfoWithSessionIdentifier:(NSString *)sessionIdentifier withAssetSource:(AEMAssetSource *)assetSource;
 
 @property (nonatomic, strong, readonly) AEMAssetSource *assetSource;
-@property (nonatomic, strong, readonly) NSMutableDictionary *assets;
+//@property (nonatomic, strong, readonly) NSMutableDictionary *assets;
+
+- (AEMAssetDownloadInfo *)assetInfoForKey:(NSString *)assetInfoKey;
+
+- (void)setAssetInfo:(AEMAssetDownloadInfo *)assetInfo forKey:(NSString *)assetInfoKey;
+
+- (NSArray <AEMAssetDownloadInfo *> *)allAssets;
+
+- (NSArray <NSString *> *)allAssetKeys;
 
 - (void)save;
 

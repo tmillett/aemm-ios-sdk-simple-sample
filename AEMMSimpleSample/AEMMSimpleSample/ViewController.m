@@ -56,10 +56,8 @@
 	NSURL *url = [NSURL URLWithString:@"http://10.50.213.159:4502"];
 
 	self.factory = [AEMAssetSourceFactory createAssetSourceFactoryWithBaseURL:url];
-	NSArray *dirpaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-	NSString *dirpath = [dirpaths objectAtIndex:0];
 
-	self.source = [self.factory createAssetSourceWithIdentifier:@"content/entities/hotelBuddy/assets1" withRootFilePath:dirpath];
+	self.source = [self.factory createAssetSourceWithIdentifier:@"content/entities/hotelBuddy/assets1" withRelativeCachePath:@"~/Library/Caches"];
 	self.task = [self.source syncInBackground:YES];
 	self.listener = [[AEMTaskListener alloc] init];
 

@@ -21,11 +21,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-static NSString* const kAEMAssetDownloadInfoVersionKey = @"version";
-static NSString* const kAEMAssetDownloadInfoLocalPathKey = @"localPath";
-static NSString* const kAEMAssetDownloadInfoRemoteURLKey = @"remoteURL";
-static NSString* const kAEMAssetDownloadInfoDownloadCompleteKey = @"downloadComplete";
-static NSString* const kAEMAssetDownloadInfoTaskIdentifierKey = @"taskIdentifier";
+NSString * const kAEMAssetDownloadInfoVersionKey = @"version";
+NSString * const kAEMAssetDownloadInfoLocalPathKey = @"localPath";
+NSString * const kAEMAssetDownloadInfoRemoteURLKey = @"remoteURL";
+NSString * const kAEMAssetDownloadInfoDownloadCompleteKey = @"downloadComplete";
+NSString * const kAEMAssetDownloadInfoTaskIdentifierKey = @"taskIdentifier";
+NSString * const kAEMAssetDownloadInfoTaskSessionIdentifierKey = @"sessionIdentifier";
 
 static NSInteger const kCurrentVersion = 0;
 
@@ -52,7 +53,7 @@ static NSInteger const kCurrentVersion = 0;
 	return self;
 }
 
-- (instancetype)initFromDictionary:(NSDictionary *)dict {
+- (instancetype)initWithDictionary:(NSDictionary *)dict {
 
 	if (self = [super init]) {
 
@@ -60,6 +61,7 @@ static NSInteger const kCurrentVersion = 0;
 		self.taskIdentifier = [dict[kAEMAssetDownloadInfoTaskIdentifierKey] integerValue] ?: -1;
 		self.remoteURL = [NSURL URLWithString:dict[kAEMAssetDownloadInfoRemoteURLKey]];
 		self.localPath = dict[kAEMAssetDownloadInfoLocalPathKey];
+		self.sessionIdentifier = dict[kAEMAssetDownloadInfoTaskSessionIdentifierKey];
 	}
 
 	return self;
@@ -69,9 +71,11 @@ static NSInteger const kCurrentVersion = 0;
 	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
 	dict[kAEMAssetDownloadInfoVersionKey] = @(self.version);
+	dict[kAEMAssetDownloadInfoTaskIdentifierKey] = @(self.taskIdentifier);
 	dict[kAEMAssetDownloadInfoLocalPathKey] = self.localPath;
 	dict[kAEMAssetDownloadInfoRemoteURLKey] = [self.remoteURL absoluteString];
 	dict[kAEMAssetDownloadInfoDownloadCompleteKey] = @(self.downloadComplete);
+	dict[kAEMAssetDownloadInfoTaskSessionIdentifierKey] = self.sessionIdentifier;
 
 
 	return dict;

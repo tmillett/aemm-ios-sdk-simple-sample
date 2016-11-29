@@ -48,9 +48,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return self;
 }
 
-- (id)createAssetSourceWithIdentifier:(NSString *)identifier withRootFilePath:(NSString *)rootFilePath {
+- (id)createAssetSourceWithIdentifier:(NSString *)identifier withRelativeCachePath:(NSString *)relativeCachePath {
 
-	AEMAssetSource *assetSource = [[AEMAssetSource alloc] initWithIdentifier:identifier withRootFilePath:rootFilePath withAssetService:self.assetService];
+	AEMAssetSource *assetSource = [[AEMAssetSource alloc] initWithIdentifier:identifier withRelativeCachePath:relativeCachePath withAssetService:self.assetService];
 	BOOL foundExisting = NO;
 	for (AEMAssetSource *existingSource in self.assetSources) {
 		if (existingSource != nil) {
