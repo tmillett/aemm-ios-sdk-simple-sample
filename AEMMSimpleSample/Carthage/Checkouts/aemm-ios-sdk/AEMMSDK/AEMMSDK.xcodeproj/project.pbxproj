@@ -11,6 +11,7 @@
 		D31B215F1DCD14450071A87B /* AEMAssetSourceFactoryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D31B215E1DCD14450071A87B /* AEMAssetSourceFactoryTests.m */; };
 		D31B21681DCD221B0071A87B /* BaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D31B21671DCD221B0071A87B /* BaseTest.m */; };
 		D31B216A1DCD22250071A87B /* testfiles in Resources */ = {isa = PBXBuildFile; fileRef = D31B21691DCD22250071A87B /* testfiles */; };
+		D337311A1DE52EA10021ED25 /* AEMAssetSourceSyncTaskDownloadInfoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D33731191DE52EA10021ED25 /* AEMAssetSourceSyncTaskDownloadInfoTests.m */; };
 		D36EF0101DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */; };
 		D36EF0111DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */; };
 		D3AB17B51DB985BD00C933B0 /* AEMAssetService.h in Headers */ = {isa = PBXBuildFile; fileRef = D3AB17B31DB985BD00C933B0 /* AEMAssetService.h */; };
@@ -89,6 +90,8 @@
 		D31B21661DCD221B0071A87B /* BaseTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseTest.h; sourceTree = "<group>"; };
 		D31B21671DCD221B0071A87B /* BaseTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BaseTest.m; sourceTree = "<group>"; };
 		D31B21691DCD22250071A87B /* testfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = testfiles; sourceTree = "<group>"; };
+		D33731191DE52EA10021ED25 /* AEMAssetSourceSyncTaskDownloadInfoTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEMAssetSourceSyncTaskDownloadInfoTests.m; sourceTree = "<group>"; };
+		D337311B1DE6483C0021ED25 /* AEMAssetSourceSyncTaskDownloadInfo+Testing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AEMAssetSourceSyncTaskDownloadInfo+Testing.h"; sourceTree = "<group>"; };
 		D36EF00E1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEMAssetSourceSyncTaskDownloadInfo.h; path = Classes/AEMAssetSourceSyncTaskDownloadInfo.h; sourceTree = "<group>"; };
 		D36EF00F1DDE7148005CD7AD /* AEMAssetSourceSyncTaskDownloadInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AEMAssetSourceSyncTaskDownloadInfo.m; path = Classes/AEMAssetSourceSyncTaskDownloadInfo.m; sourceTree = "<group>"; };
 		D3AB17B31DB985BD00C933B0 /* AEMAssetService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEMAssetService.h; path = Classes/AEMAssetService.h; sourceTree = "<group>"; };
@@ -205,8 +208,10 @@
 				D31B215B1DCC0BB10071A87B /* AEMAssetSourceSyncTask+Testing.h */,
 				D31B215E1DCD14450071A87B /* AEMAssetSourceFactoryTests.m */,
 				D3C202F51DB04319005BED65 /* AEMAssetSourceSyncTaskTests.m */,
+				D33731191DE52EA10021ED25 /* AEMAssetSourceSyncTaskDownloadInfoTests.m */,
 				D31B21691DCD22250071A87B /* testfiles */,
 				D3C202F71DB04319005BED65 /* Info.plist */,
+				D337311B1DE6483C0021ED25 /* AEMAssetSourceSyncTaskDownloadInfo+Testing.h */,
 			);
 			path = AEMMSDKTests;
 			sourceTree = "<group>";
@@ -463,6 +468,7 @@
 				D31B21681DCD221B0071A87B /* BaseTest.m in Sources */,
 				D31B215F1DCD14450071A87B /* AEMAssetSourceFactoryTests.m in Sources */,
 				D3C202F61DB04319005BED65 /* AEMAssetSourceSyncTaskTests.m in Sources */,
+				D337311A1DE52EA10021ED25 /* AEMAssetSourceSyncTaskDownloadInfoTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -51,8 +51,8 @@
 
 	asset[@"url"] = rawAsset[@"url"];
 	asset[@"length"] = rawAsset[@"length"];
-	asset[@"md5"] = rawAsset[@"md5"];
-	asset[@"localPath"] = rawAsset[@"localPath"];
+	asset[@"md5"] = rawAsset[@"mD5"] ?: rawAsset[@"md5"];
+	asset[@"localPath"] = rawAsset[@"localpath"] ?: rawAsset[@"localPath"];
 
 	return asset;
 }

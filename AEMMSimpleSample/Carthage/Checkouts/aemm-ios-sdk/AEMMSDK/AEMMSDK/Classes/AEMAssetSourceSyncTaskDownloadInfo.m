@@ -29,7 +29,7 @@ static const NSString *kAssetSourceKey = @"assetSource";
 @interface AEMAssetSourceSyncTaskDownloadInfo ()
 
 @property (nonatomic, strong) AEMAssetSource *assetSource;
-@property (nonatomic, strong) NSMutableDictionary *assets;
+@property (nonatomic, strong) NSMutableDictionary <NSString *, AEMAssetDownloadInfo *> *assets;
 @property (nonatomic, strong) NSString *filePath;
 
 @end
@@ -37,8 +37,14 @@ static const NSString *kAssetSourceKey = @"assetSource";
 @implementation AEMAssetSourceSyncTaskDownloadInfo
 
 + (NSString *)cachedAssetDownloadInfosPathForSessionIdentifier:(NSString *)sessionIdentifier {
-	NSString *cachedAssetDownloadInfosPath = [NSString stringForPathComponentInCachesDirectory:@"AEMAssetSourceSyncTaskDownloadInfos"];
-	return [cachedAssetDownloadInfosPath stringByAppendingPathComponent:sessionIdentifier];
+	NSData *sessionIdentifierData = [sessionIdentifier dataUsingEncoding:NSUTF8StringEncoding];
+	NSString *base64SessionIdentifier = [sessionIdentifierData base64EncodedStringWithOptions:0];
+	NSString *cachedAssetDownloadInfosPath = [self baseFilePathForCachedAssetDownloadInfos];
+	return [[cachedAssetDownloadInfosPath stringByAppendingPathComponent:base64SessionIdentifier] stringByAppendingPathExtension:@"json"];
+}
+
++ (NSString *)baseFilePathForCachedAssetDownloadInfos {
+	return [NSString stringForPathComponentInCachesDirectory:@"AEMAssetSourceSyncTaskDownloadInfos"];
 }
 
 + (NSMutableDictionary *)loadAssetSourceDownloadInfoFromFilePath:(NSString *)filePath withAssetService:(AEMAssetService *)assetService {
@@ -50,22 +56,24 @@ static const NSString *kAssetSourceKey = @"assetSource";
 	NSData *data = [NSData dataWithContentsOfFile:filePath];
 	if (data) {
 		loadedJSON = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
-	}
 
-	if (loadedJSON) {
+		NSLog(@"loaded downloadInfo:%@",loadedJSON);
 
-		assetSourceDownloadInfo = [NSMutableDictionary dictionary];
-		assetSourceDownloadInfo[kAssetSourceKey] = [AEMAssetSource assetSourceFromDictionary:loadedJSON[kAssetSourceKey] withAssetService:assetService];
+		if (loadedJSON.count) {
 
-		NSMutableDictionary *assetDownloadInfos = [NSMutableDictionary dictionaryWithCapacity:loadedJSON.count];
-		for (NSString *infoKey in loadedJSON[kAssetsKey]) {
-			NSDictionary *info = loadedJSON[kAssetsKey][infoKey];
-			assetDownloadInfos[infoKey] = [AEMAssetDownloadInfo assetDownloadInfoFromDict:info];
+			assetSourceDownloadInfo = [NSMutableDictionary dictionary];
+			assetSourceDownloadInfo[kAssetSourceKey] = [AEMAssetSource assetSourceFromDictionary:loadedJSON[kAssetSourceKey] withAssetService:assetService];
+
+			NSMutableDictionary *assetDownloadInfos = [NSMutableDictionary dictionaryWithCapacity:loadedJSON.count];
+			for (NSString *infoKey in loadedJSON[kAssetsKey]) {
+				NSDictionary *info = loadedJSON[kAssetsKey][infoKey];
+				assetDownloadInfos[infoKey] = [AEMAssetDownloadInfo assetDownloadInfoFromDict:info];
+			}
+
+			assetSourceDownloadInfo[kAssetsKey] = assetDownloadInfos;
+		} else {
+			ASSERT(error == nil || error.domain == NSCocoaErrorDomain && error.code == NSFileNoSuchFileError, @"error when reading assetDownloadInfo");
 		}
-
-		assetSourceDownloadInfo[kAssetsKey] = assetDownloadInfos;
-	} else {
-		ASSERT(error == nil || error.domain == NSCocoaErrorDomain && error.code == NSFileNoSuchFileError, @"error when reading assetDownloadInfo");
 	}
 
 	return assetSourceDownloadInfo;
@@ -96,6 +104,22 @@ static const NSString *kAssetSourceKey = @"assetSource";
 	info.filePath = filePath;
 	return info;
 
+}
+
+- (AEMAssetDownloadInfo *)assetInfoForKey:(NSString *)assetInfoKey {
+	return self.assets[assetInfoKey];
+}
+
+- (void)setAssetInfo:(AEMAssetDownloadInfo *)assetInfo forKey:(NSString *)assetInfoKey {
+	self.assets[assetInfoKey] = assetInfo;
+}
+
+- (NSArray <AEMAssetDownloadInfo *> *)allAssets {
+	return [self.assets allValues];
+}
+
+- (NSArray <NSString *> *)allAssetKeys {
+	return [self.assets allKeys];
 }
 
 - (void)save {

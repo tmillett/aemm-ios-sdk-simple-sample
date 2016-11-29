@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 @implementation AEMAssetSourceSyncTask
 
 + (NSString *)sessionIdentifierForAssetSource:(AEMAssetSource *)assetSource {
-	return [NSString stringWithFormat:@"AEMAssetSourceSyncTaskSessionIdentifier-%@-%@", assetSource.base64Identifier, assetSource.rootFilePath];
+	return [NSString stringWithFormat:@"AEMAssetSourceSyncTaskSessionIdentifier-%@-%@", assetSource.identifier, assetSource.relativeCachePath];
 }
 
 + (NSString *)sessionIdentifierForManifestForAssetSource:(AEMAssetSource *)assetSource {
@@ -68,27 +68,28 @@ NS_ASSUME_NONNULL_BEGIN
 	AEMAssetSourceSyncTaskDownloadInfo *downloadInfo = [AEMAssetSourceSyncTaskDownloadInfo assetSourceSyncTaskDownloadInfoWithSessionIdentifier:sessionIdentifier withAssetService:assetService];
 	
 	if (downloadInfo) {
-		AEMAssetSourceSyncTask *syncTask = [[AEMAssetSourceSyncTask alloc] initInBackground];
-		syncTask.assetSourceSyncTaskDownloadInfo = downloadInfo;
-		syncTask.assetSource = downloadInfo.assetSource;
+		AEMAssetSourceSyncTask *syncTask = [[AEMAssetSourceSyncTask alloc] initInBackgroundWithDownloadInfo:downloadInfo];
 		return syncTask;
 	} else {
 		return nil;
 	}
 }
 
-- (instancetype)initInBackground {
+- (instancetype)initInBackgroundWithDownloadInfo:(AEMAssetSourceSyncTaskDownloadInfo *)downloadInfo {
 
 	if (self = [super init]) {
 
 		self.inBackground = YES;
-		
-		self.manifestUrlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForManifestForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
+
+		self.assetSourceSyncTaskDownloadInfo = downloadInfo;
+		self.assetSource = downloadInfo.assetSource;
 
 		self.urlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
 
+		NSLog(@"Creating urlSession with identifier:%@",[self.class sessionIdentifierForAssetSource:self.assetSource]);
 
-		self.parseQueue = [[NSOperationQueue alloc] init];
+		self.urlSession = [self.assetSource.assetService createURLSessionWithIdentifier:[self.class sessionIdentifierForAssetSource:self.assetSource] inBackground:self.inBackground withDelegate:self];
+		[self.urlSession finishTasksAndInvalidate];
 	}
 
 	return self;
@@ -114,11 +115,11 @@ NS_ASSUME_NONNULL_BEGIN
 	return self;
 }
 
-- (void)parseExistingManifestAtPath:(NSString *)existingManifestPath
+- (void)parseExistingManifestAtPath:(NSString *)existingManifestRelativePath
 						 withParser:(RemoteResponseParser *)parser
 				withCompletionBlock:(void (^)(NSDictionary * _Nullable, NSError * _Nullable))completionBlock {
 
-	NSData *data = [NSData dataWithContentsOfFile:existingManifestPath];
+	NSData *data = [NSData dataWithContentsOfFile:[existingManifestRelativePath stringByExpandingTildeInPath]];
 
 	if (data) {
 		NSError* jsonError = nil;
@@ -153,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (NSURL *)manifestURL {
-	return [[self.assetSource.assetService.baseURL URLByAppendingPathComponent:self.assetSource.identifier] URLByAppendingPathComponent:@"manifest.json"];
+	return [[self.assetSource.assetService.baseURL URLByAppendingPathComponent:self.assetSource.identifier] URLByAppendingPathExtension:@"caas.json"];
 }
 
 - (void)downloadLatestManifest {
@@ -168,15 +169,17 @@ NS_ASSUME_NONNULL_BEGIN
 	NSURL *manifestURL = [self manifestURL];
 
 	ASSERT(manifestURL, @"manifestURL is nil");
-
-	NSURLSessionTask *manifestDataTask = [self.manifestUrlSession downloadTaskWithURL:manifestURL];
+	
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:manifestURL];
+	[self addCookie:request];
+	NSURLSessionTask *manifestDataTask = [self.manifestUrlSession downloadTaskWithRequest:request];
 
 	AEMAssetDownloadInfo *info = [[AEMAssetDownloadInfo alloc] init];
 	info.taskIdentifier = manifestDataTask.taskIdentifier;
 	info.sessionIdentifier = self.urlSession.configuration.identifier;
 	info.remoteURL = manifestURL;
-	info.localPath = self.assetSource.latestManifestPath;
-	self.assetSourceSyncTaskDownloadInfo.assets[manifestURL.absoluteString] = info;
+	info.localPath = self.assetSource.latestManifestRelativePath;
+	[self.assetSourceSyncTaskDownloadInfo setAssetInfo:info forKey:manifestURL.absoluteString];
 
 	[manifestDataTask resume];
 
@@ -212,9 +215,9 @@ NS_ASSUME_NONNULL_BEGIN
 		parseBGTaskId = UIBackgroundTaskInvalid;
 	};
 
-	NSString *existingManifestPath = [self.assetSource existingManifestPath];
+	NSString *existingManifestRelativePath = [self.assetSource existingManifestRelativePath];
 
-	[self parseExistingManifestAtPath:existingManifestPath
+	[self parseExistingManifestAtPath:existingManifestRelativePath
 						   withParser:[self.assetSource.assetService createManifestParser]
 				  withCompletionBlock:parseExistingCompletionBlock];
 
@@ -335,6 +338,18 @@ NS_ASSUME_NONNULL_BEGIN
 	}];
 }
 
+- (void)addCookie:(NSMutableURLRequest *)request {
+  [request setValue:@"cq-authoring-mode=TOUCH; login-token=640f96aa-b4d3-4c9c-8497-2791cc501fac%3a85db58a0-1495-4e61-84ba-bb33fc72751e_f33ee54744d6d797%3acrx.default" forHTTPHeaderField:@"Cookie"];
+}
+
+- (NSString *)localRelativePathForAsset:(NSDictionary *)asset {
+	NSString *localPathFragment = asset[@"localPath"];
+	if (!localPathFragment) {
+		localPathFragment = [[NSURL URLWithString:asset[@"url"]] path];
+	}
+	return [self.assetSource.relativeCachePath stringByAppendingPathComponent:localPathFragment];
+}
+
 - (void)downloadAssets {
 
 	__block NSInteger bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithName:NSString.guidString expirationHandler:^{
@@ -369,7 +384,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 			ASSERT(url, @"url is nil");
 
-			NSURLSessionDownloadTask *task = [self.urlSession downloadTaskWithURL:url];
+			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+			[self addCookie:request];
+
+			NSURLSessionDownloadTask *task = [self.urlSession downloadTaskWithRequest:request];
 
 			AEMAssetDownloadInfo *info = [[AEMAssetDownloadInfo alloc] init];
 			info.taskIdentifier = task.taskIdentifier;
@@ -379,9 +397,11 @@ NS_ASSUME_NONNULL_BEGIN
 			if (!localPathFragment) {
 				localPathFragment = url.path;
 			}
-			NSString *localPath = [self.assetSource.rootFilePath stringByAppendingPathComponent:localPathFragment];
+			NSString *localPath = [self.assetSource.relativeCachePath stringByAppendingPathComponent:localPathFragment];
 			info.localPath = localPath;
-			self.assetSourceSyncTaskDownloadInfo.assets[url.absoluteString] = info;
+			[self.assetSourceSyncTaskDownloadInfo setAssetInfo:info forKey:url.absoluteString];
+
+			info.localPath = [self localRelativePathForAsset:asset];
 
 			[tasks addObject:task];
 		}
@@ -410,7 +430,7 @@ NS_ASSUME_NONNULL_BEGIN
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 
 			for (NSDictionary *asset in [self.assetsRemoved allValues]) {
-				if (![[NSFileManager defaultManager] removeItemAtPath:[self.assetSource.rootFilePath stringByAppendingPathComponent:asset[@"localPath"]] error:nil]) {
+				if (![[NSFileManager defaultManager] removeItemAtPath:[[self localRelativePathForAsset:asset] stringByExpandingTildeInPath] error:nil]) {
 					ASSERT_FAIL(@"");
 				}
 			}
@@ -439,7 +459,7 @@ NS_ASSUME_NONNULL_BEGIN
 	double totalWritten = 0;
 	double totalExpectedToWrite = 0;
 
-	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo.assets allValues]) {
+	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo allAssets]) {
 		totalWritten += info.sizeWritten;
 		totalExpectedToWrite += info.expectedSize;
 	}
@@ -449,7 +469,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSError *)assetDownloadInfosContainErrors {
 	NSError *error = nil;
-	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo.assets allValues]) {
+	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo allAssets]) {
 		if (info.downloadError) {
 			error = info.downloadError;
 			break;
@@ -461,7 +481,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)assetDownloadInfosDownloadCompleted {
 	BOOL downloadCompleted = YES;
-	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo.assets allValues]) {
+	for (AEMAssetDownloadInfo *info in [self.assetSourceSyncTaskDownloadInfo allAssets]) {
 		if (!info.downloadComplete) {
 			downloadCompleted = NO;
 			break;
@@ -477,15 +497,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 			NSError *error = nil;
-			if ([[NSFileManager defaultManager] fileExistsAtPath:self.assetSource.existingManifestPath]) {
-				if (![[NSFileManager defaultManager] removeItemAtPath:self.assetSource.existingManifestPath error:&error]) {
+			if ([[NSFileManager defaultManager] fileExistsAtPath:[self.assetSource.existingManifestRelativePath stringByExpandingTildeInPath]]) {
+				if (![[NSFileManager defaultManager] removeItemAtPath:[self.assetSource.existingManifestRelativePath stringByExpandingTildeInPath] error:&error]) {
 					//TODO: Handle error
 					ASSERT_FAIL(@"");
 				};
 			}
 
-			if (![[NSFileManager defaultManager] moveItemAtPath:self.assetSource.latestManifestPath
-														 toPath:self.assetSource.existingManifestPath
+			if (![[NSFileManager defaultManager] moveItemAtPath:[self.assetSource.latestManifestRelativePath stringByExpandingTildeInPath]
+														 toPath:[self.assetSource.existingManifestRelativePath stringByExpandingTildeInPath]
 														  error:&error]) {
 				//TODO: Handle error
 				ASSERT_FAIL(@"");
@@ -605,7 +625,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSLog(@"URLSession:downloadTask:didFinishDownloadingToURL: %@",downloadTask.originalRequest.URL);
 
-	AEMAssetDownloadInfo *downloadInfo = self.assetSourceSyncTaskDownloadInfo.assets[downloadTask.originalRequest.URL.absoluteString];
+	AEMAssetDownloadInfo *downloadInfo = [self.assetSourceSyncTaskDownloadInfo assetInfoForKey:downloadTask.originalRequest.URL.absoluteString];
 
 	if ([[downloadInfo.remoteURL absoluteString] isEqualToString:[[self manifestURL] absoluteString]]) {
 
@@ -619,8 +639,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 		NSData *data = [NSData dataWithContentsOfFile:location.path];
 
-		if ([[NSFileManager defaultManager] fileExistsAtPath:self.assetSource.latestManifestPath]) {
-			if (![[NSFileManager defaultManager] removeItemAtPath:self.assetSource.latestManifestPath error:&error]) {
+		if ([[NSFileManager defaultManager] fileExistsAtPath:[self.assetSource.latestManifestRelativePath stringByExpandingTildeInPath]]) {
+			if (![[NSFileManager defaultManager] removeItemAtPath:[self.assetSource.latestManifestRelativePath stringByExpandingTildeInPath] error:&error]) {
 				//TODO: Handle error
 				ASSERT_FAIL(@"");
 			}
@@ -632,7 +652,7 @@ NS_ASSUME_NONNULL_BEGIN
 			ASSERT_FAIL(@"");
 		}
 
-		if (![[json JSONRepresentation] writeToFile:self.assetSource.latestManifestPath atomically:YES encoding:NSUTF8StringEncoding error:&error]) {
+		if (![[json JSONRepresentation] writeToFile:[self.assetSource.latestManifestRelativePath stringByExpandingTildeInPath] atomically:YES encoding:NSUTF8StringEncoding error:&error]) {
 			//TODO: Handle error
 			ASSERT_FAIL(@"");
 		}
@@ -670,7 +690,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (error == nil) {
 			downloadInfo.downloadComplete = YES;
 
-			NSURL *assetLocationURL = [NSURL fileURLWithPath:downloadInfo.localPath];
+			NSURL *assetLocationURL = [NSURL fileURLWithPath:[downloadInfo.localPath stringByExpandingTildeInPath]];
 
 			if (assetLocationURL == nil) {
 				//TODO: Handle error
@@ -679,7 +699,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 			NSError *error = nil;
 
-			if (![[NSFileManager defaultManager] createDirectoryAtPath:[downloadInfo.localPath stringByDeletingLastPathComponent]  withIntermediateDirectories:YES attributes:nil error:&error]) {
+			if (![[NSFileManager defaultManager] createDirectoryAtPath:[[downloadInfo.localPath stringByDeletingLastPathComponent] stringByExpandingTildeInPath] withIntermediateDirectories:YES attributes:nil error:&error]) {
 				//TODO: Handle error
 				if (![error.domain isEqualToString:NSCocoaErrorDomain] ||
 					error.code == NSFileWriteFileExistsError) {
@@ -687,7 +707,7 @@ NS_ASSUME_NONNULL_BEGIN
 				}
 			}
 
-			if ([[NSFileManager defaultManager] fileExistsAtPath:downloadInfo.localPath]) {
+			if ([[NSFileManager defaultManager] fileExistsAtPath:[downloadInfo.localPath stringByExpandingTildeInPath]]) {
 				if (![[NSFileManager defaultManager] removeItemAtURL:assetLocationURL error:&error]) {
 					//TODO: Handle error
 					ASSERT_FAIL(@"%@", error);
@@ -723,7 +743,7 @@ NS_ASSUME_NONNULL_BEGIN
 		bgTaskId = UIBackgroundTaskInvalid;
 	}];
 
-	AEMAssetDownloadInfo *downloadInfo = self.assetSourceSyncTaskDownloadInfo.assets[downloadTask.originalRequest.URL.absoluteString];
+	AEMAssetDownloadInfo *downloadInfo = [self.assetSourceSyncTaskDownloadInfo assetInfoForKey:downloadTask.originalRequest.URL.absoluteString];
 
 	downloadInfo.expectedSize = totalBytesExpectedToWrite;
 	downloadInfo.sizeWritten = totalBytesWritten;
@@ -751,7 +771,7 @@ didCompleteWithError:(nullable NSError *)error {
 
 	NSLog(@"URLSession:%@ task:%@ didBecomeInvalidWithError:%@",session, task, error);
 
-	AEMAssetDownloadInfo *downloadInfo = self.assetSourceSyncTaskDownloadInfo.assets[task.originalRequest.URL.absoluteString];
+	AEMAssetDownloadInfo *downloadInfo = [self.assetSourceSyncTaskDownloadInfo assetInfoForKey:task.originalRequest.URL.absoluteString];
 
 	if ([downloadInfo.remoteURL isEqual:[self manifestURL]]) {
 

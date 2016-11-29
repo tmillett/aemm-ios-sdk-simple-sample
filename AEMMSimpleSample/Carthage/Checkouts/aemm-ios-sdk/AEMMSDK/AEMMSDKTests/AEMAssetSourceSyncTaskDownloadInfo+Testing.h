@@ -17,19 +17,10 @@
  * from Adobe Systems Incorporated.
  **************************************************************************/
 
-#import <Foundation/Foundation.h>
+#import "AEMAssetSourceSyncTaskDownloadInfo.h"
 
-@class AEMAssetSourceSyncTask;
+@interface AEMAssetSourceSyncTaskDownloadInfo (Testing)
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface AEMAssetSource : NSObject
-
-- (AEMAssetSourceSyncTask *)syncInBackground:(BOOL)inBackground;
-
-@property (nonatomic, strong, readonly) NSString *identifier;
-@property (nonatomic, strong, readonly) NSString *relativeCachePath;
++ (NSString *)baseFilePathForCachedAssetDownloadInfos;
 
 @end
-
-NS_ASSUME_NONNULL_END
